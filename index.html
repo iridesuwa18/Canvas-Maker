@@ -348,6 +348,43 @@
 
   ::-webkit-scrollbar{ width:8px; }
   ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+
+  .switch-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+  }
+  .switch-row .lbl{ font-size:13px; font-weight:600; color:var(--ink); }
+  .switch-row .lbl .sub{ display:block; font-size:11px; font-weight:400; color:var(--ink-dim); margin-top:1px; }
+  .switch{
+    position:relative;
+    width:42px; height:24px;
+    flex:none;
+    border-radius:14px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .switch .knob{
+    position:absolute;
+    top:2px; left:2px;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:var(--ink-dim);
+    transition:transform .18s ease, background .15s ease;
+  }
+  .switch.on{
+    background:linear-gradient(135deg,var(--umber-light),var(--umber));
+    border-color:transparent;
+  }
+  .switch.on .knob{
+    transform:translateX(18px);
+    background:#20140a;
+  }
+  .toolgrid.disabled button:not([data-tool="pan"]){
+    opacity:0.4;
+    pointer-events:none;
+  }
 </style>
 </head>
 <body>
@@ -411,7 +448,13 @@
 
       <div class="section">
         <div class="section-title">Tool</div>
-        <div class="toolgrid">
+
+        <div class="switch-row">
+          <span class="lbl">Painting<span class="sub">Off by default — canvas only pans/zooms</span></span>
+          <div class="switch" id="paintToggle"><div class="knob"></div></div>
+        </div>
+
+        <div class="toolgrid disabled" id="toolgrid">
           <button data-tool="brush" class="active">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 15l6-6M4 20l3-1 9-9-2-2-9 9-1 3z"/><path d="M14 6l4 4"/></svg>
             Brush
@@ -681,6 +724,7 @@ const state = {
   customW: 210, customH: 297,
   dpiIdx: 1, // 0 draft(96) 1 standard(150) 2 high(200)
   tool: 'brush',
+  paintingEnabled: false,
   brushColor: '#2b2420',
   brushSize: 18,
   brushOpacity: 85,
@@ -866,7 +910,7 @@ stage.addEventListener('pointerdown',(e)=>{
   }
   if(pointers.size>2) return;
 
-  if(state.tool==='pan'){
+  if(state.tool==='pan' || !state.paintingEnabled){
     drawing='pan';
     lastWorld = {x:e.clientX,y:e.clientY};
     return;
@@ -939,11 +983,32 @@ document.getElementById('clearBtn').onclick = ()=>{
 /* ---------- toolbar wiring ---------- */
 document.querySelectorAll('.toolgrid button').forEach(btn=>{
   btn.addEventListener('click',()=>{
+    if(!state.paintingEnabled && btn.dataset.tool!=='pan') return;
     document.querySelectorAll('.toolgrid button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     state.tool = btn.dataset.tool;
-    viewportWrap.style.cursor = state.tool==='pan' ? 'grab' : 'crosshair';
+    updateCursor();
   });
+});
+
+function updateCursor(){
+  viewportWrap.style.cursor = (state.tool==='pan' || !state.paintingEnabled) ? 'grab' : 'crosshair';
+}
+
+const paintToggle = document.getElementById('paintToggle');
+const toolgridEl = document.getElementById('toolgrid');
+paintToggle.addEventListener('click',()=>{
+  state.paintingEnabled = !state.paintingEnabled;
+  paintToggle.classList.toggle('on', state.paintingEnabled);
+  toolgridEl.classList.toggle('disabled', !state.paintingEnabled);
+  if(state.paintingEnabled && state.tool==='pan'){
+    // restore brush as the default active tool once painting turns on
+    const brushBtn = toolgridEl.querySelector('[data-tool="brush"]');
+    toolgridEl.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    brushBtn.classList.add('active');
+    state.tool = 'brush';
+  }
+  updateCursor();
 });
 
 const SWATCH_COLORS = ['#2b2420','#7a3b2e','#c9862f','#4a5a3c','#2e4a5a','#e8e2d5','#7c1d1d','#1c1c1c'];
