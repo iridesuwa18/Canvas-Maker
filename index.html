@@ -661,12 +661,22 @@
           <option value="square">Square — 250 × 250 mm</option>
           <option value="custom">Custom…</option>
         </select>
-        <div class="row" id="customSizeRow" style="display:none;">
-          <div><label>Width (mm)</label><input type="number" id="customW" value="210" min="20" max="1000"></div>
-          <div><label>Height (mm)</label><input type="number" id="customH" value="297" min="20" max="1000"></div>
+        <div id="customSizeRow" style="display:none;">
+          <label>Unit</label>
+          <select id="customUnit">
+            <option value="mm">Millimeters</option>
+            <option value="px">Pixels</option>
+          </select>
+          <div class="row" style="margin-top:8px;">
+            <div><label id="customWLbl">Width (mm)</label><input type="number" id="customW" value="210" min="20" max="1000"></div>
+            <div><label id="customHLbl">Height (mm)</label><input type="number" id="customH" value="297" min="20" max="1000"></div>
+          </div>
         </div>
-        <label>Detail <span class="val" id="dpiLabel">Standard</span></label>
-        <input type="range" id="dpi" min="0" max="2" value="1" step="1">
+        <div id="dpiBlock">
+          <label>Detail <span class="val" id="dpiLabel">Standard</span></label>
+          <input type="range" id="dpi" min="0" max="2" value="1" step="1">
+        </div>
+        <div class="hint" id="pxUnitNote" style="display:none;">Pixel size is exact — the Detail slider doesn't apply.</div>
         <div class="hint" id="pxHint">≈ 1240 × 1754 px</div>
       </div>
 
@@ -970,6 +980,8 @@ const state = {
   tint: '#ece3cf',
   sizePreset: 'a4',
   customW: 210, customH: 297,
+  customUnit: 'mm',           // 'mm' | 'px' — which unit the custom width/height are in
+  customWpx: 1240, customHpx: 1754,
   dpiIdx: 1, // 0 draft(96) 1 standard(150) 2 high(200)
   scale: 1, offsetX: 0, offsetY: 0,
 };
@@ -997,6 +1009,17 @@ function currentSizeMM(){
 }
 
 function computePxSize(){
+  // Pixel-unit custom size skips the mm/DPI conversion entirely — the
+  // numbers you type are the exact canvas dimensions.
+  if(state.sizePreset === 'custom' && state.customUnit === 'px'){
+    let w = Math.round(state.customWpx), h = Math.round(state.customHpx);
+    const mp = (w*h)/1e6;
+    if(mp > MAX_MEGAPIXELS){
+      const f = Math.sqrt(MAX_MEGAPIXELS/mp);
+      w = Math.round(w*f); h = Math.round(h*f);
+    }
+    return [w,h];
+  }
   const [wmm,hmm] = currentSizeMM();
   const dpi = DPI_VALUES[state.dpiIdx];
   let w = mmToPx(wmm,dpi), h = mmToPx(hmm,dpi);
@@ -1010,7 +1033,36 @@ function computePxSize(){
 
 function updatePxHint(){
   const [w,h] = computePxSize();
-  document.getElementById('pxHint').textContent = `≈ ${w} × ${h} px`;
+  const exact = (state.sizePreset==='custom' && state.customUnit==='px');
+  document.getElementById('pxHint').textContent = `${exact?'=':'≈'} ${w} × ${h} px`;
+}
+
+// Swaps the custom-size inputs between mm and px: different label, range,
+// and stored field, plus hiding the Detail/DPI slider in px mode since it
+// has nothing to do once the size is given directly in pixels.
+function syncCustomSizeUI(){
+  const wIn = document.getElementById('customW');
+  const hIn = document.getElementById('customH');
+  const wLbl = document.getElementById('customWLbl');
+  const hLbl = document.getElementById('customHLbl');
+  const dpiBlock = document.getElementById('dpiBlock');
+  const pxNote = document.getElementById('pxUnitNote');
+  if(state.customUnit === 'px'){
+    wLbl.textContent = 'Width (px)';
+    hLbl.textContent = 'Height (px)';
+    wIn.min = 64; wIn.max = 6000; wIn.step = 1; wIn.value = state.customWpx;
+    hIn.min = 64; hIn.max = 6000; hIn.step = 1; hIn.value = state.customHpx;
+    dpiBlock.style.display = 'none';
+    pxNote.style.display = 'block';
+  } else {
+    wLbl.textContent = 'Width (mm)';
+    hLbl.textContent = 'Height (mm)';
+    wIn.min = 20; wIn.max = 1000; wIn.step = 1; wIn.value = state.customW;
+    hIn.min = 20; hIn.max = 1000; hIn.step = 1; hIn.value = state.customH;
+    dpiBlock.style.display = '';
+    pxNote.style.display = 'none';
+  }
+  updatePxHint();
 }
 
 /* ---------- generate paper ---------- */
@@ -1158,11 +1210,24 @@ document.getElementById('generateBtn').addEventListener('click', regenerate);
 
 document.getElementById('sizePreset').addEventListener('change',(e)=>{
   state.sizePreset = e.target.value;
-  document.getElementById('customSizeRow').style.display = state.sizePreset==='custom' ? 'flex' : 'none';
+  document.getElementById('customSizeRow').style.display = state.sizePreset==='custom' ? 'block' : 'none';
+  if(state.sizePreset==='custom') syncCustomSizeUI();
+  else updatePxHint();
+});
+document.getElementById('customUnit').addEventListener('change',(e)=>{
+  state.customUnit = e.target.value;
+  syncCustomSizeUI();
+});
+document.getElementById('customW').addEventListener('input',(e)=>{
+  const v = +e.target.value;
+  if(state.customUnit==='px') state.customWpx = v; else state.customW = v;
   updatePxHint();
 });
-document.getElementById('customW').addEventListener('input',(e)=>{ state.customW=+e.target.value; updatePxHint(); });
-document.getElementById('customH').addEventListener('input',(e)=>{ state.customH=+e.target.value; updatePxHint(); });
+document.getElementById('customH').addEventListener('input',(e)=>{
+  const v = +e.target.value;
+  if(state.customUnit==='px') state.customHpx = v; else state.customH = v;
+  updatePxHint();
+});
 document.getElementById('dpi').addEventListener('input',(e)=>{
   state.dpiIdx = +e.target.value;
   document.getElementById('dpiLabel').textContent = DPI_LABELS[state.dpiIdx];
