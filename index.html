@@ -1842,15 +1842,23 @@ function findWaterShape(x,y){
   return null;
 }
 
-function addWetBlob(shape){
+function addWetBlob(shape, point){
   if(!shape) return;
   const vol = paletteState.waterVolume/100;       // 0..1 — how much water is being added
   const cap = 0.5 + 0.6*vol;                       // more water -> can build to a stronger, longer-lived swirl
   const pulse = 0.22 + 0.45*vol;                   // more water -> each touch adds more strength
+  const cx = point ? point.x : shape.cx, cy = point ? point.y : shape.cy;
   const blobs = paletteState.wetBlobs;
   let b = blobs.find(bl=>bl.shape===shape);
-  if(b){ b.strength = Math.min(cap, b.strength+pulse); b.volume = vol; }
-  else { blobs.push({shape, strength:Math.min(cap, pulse+0.15), volume:vol}); }
+  if(b){
+    b.strength = Math.min(cap, b.strength+pulse);
+    b.volume = vol;
+    // spiral origin eases toward wherever you're currently pressing, so
+    // dragging around the well drags the whole swirl with it
+    b.cx += (cx-b.cx)*0.5;
+    b.cy += (cy-b.cy)*0.5;
+  }
+  else { blobs.push({shape, strength:Math.min(cap, pulse+0.15), volume:vol, cx, cy}); }
   startWetLoop();
   renderWetOverlay();
 }
@@ -1920,7 +1928,7 @@ function wetTick(){
   // While the pointer is held down with the water tool, keep re-wetting
   // whichever well it's over every tick — even if it isn't moving — so a
   // stationary press keeps swirling instead of fizzling out after one pulse.
-  if(paletteState.waterHold) addWetBlob(paletteState.waterHold);
+  if(paletteState.waterHold) addWetBlob(paletteState.waterHold.shape, paletteState.waterHold.point);
 
   const blobs = paletteState.wetBlobs;
   if(!blobs.length || !field){ stopWetLoop(); paletteWetCtx.clearRect(0,0,fieldW,fieldH); return; }
@@ -1928,7 +1936,8 @@ function wetTick(){
   for(let bi=blobs.length-1; bi>=0; bi--){
     const b = blobs[bi];
     const vol = b.volume!=null ? b.volume : 0.5;   // how much water is in this well right now
-    const {cx,cy,r} = b.shape;
+    const {cx:hcx, cy:hcy, r} = b.shape;            // the physical hole — bounds how far water can reach
+    const cx = b.cx, cy = b.cy;                     // the spiral's origin — wherever you're pressing
     const pull = 1 + SWIRL_PULL*b.strength*(0.7+0.6*vol);   // more water pulls colour in harder
     const blend = SWIRL_BLEND*b.strength;
     const diffuse = SWIRL_DIFFUSE*b.strength*(0.5+1.0*vol); // more water blends/softens more
@@ -1937,17 +1946,20 @@ function wetTick(){
     // it out fast
     const dilute = WATER_DILUTE_RATE*b.strength*(0.12+1.9*vol*vol*vol);
     const blurD = r*(0.045+0.05*vol); // how wide the soft-blur taps spread — more water spreads colour further
-    const x0=Math.max(0,Math.floor(cx-r)), x1=Math.min(fieldW-1,Math.ceil(cx+r));
-    const y0=Math.max(0,Math.floor(cy-r)), y1=Math.min(fieldH-1,Math.ceil(cy+r));
+    const x0=Math.max(0,Math.floor(hcx-r)), x1=Math.min(fieldW-1,Math.ceil(hcx+r));
+    const y0=Math.max(0,Math.floor(hcy-r)), y1=Math.min(fieldH-1,Math.ceil(hcy+r));
     const r2 = r*r;
     for(let y=y0;y<=y1;y++){
-      const dy=y-cy;
+      const hdy=y-hcy;
       for(let x=x0;x<=x1;x++){
-        const dx=x-cx;
-        if(dx*dx+dy*dy>r2) continue;
+        const hdx=x-hcx;
+        // clip to the actual hole, not the spiral origin — this is what
+        // lets water still fill the whole well even when you click off-centre
+        if(hdx*hdx+hdy*hdy>r2) continue;
+        const dx=x-cx, dy=y-cy;
         // rotate (dx,dy) backward one step and push it outward — the point
         // that "flows into" this pixel next tick if the whole hole is
-        // spinning and draining toward its centre
+        // spinning and draining toward wherever you're pressing
         let rx = dx*swirlCosA + dy*swirlSinA;
         let ry = -dx*swirlSinA + dy*swirlCosA;
         rx *= pull; ry *= pull;
@@ -2030,8 +2042,8 @@ paletteCanvas.addEventListener('pointerdown',(e)=>{
 
   if(paletteState.tool==='water'){
     const shape = findWaterShape(p.x,p.y);
-    paletteState.waterHold = shape;
-    if(shape) addWetBlob(shape);
+    paletteState.waterHold = shape ? {shape, point:p} : null;
+    if(shape) addWetBlob(shape, p);
     return;
   }
 
@@ -2055,8 +2067,8 @@ paletteCanvas.addEventListener('pointermove',(e)=>{
 
   if(paletteState.tool==='water'){
     const shape = findWaterShape(p.x,p.y);
-    paletteState.waterHold = shape;
-    if(shape) addWetBlob(shape);
+    paletteState.waterHold = shape ? {shape, point:p} : null;
+    if(shape) addWetBlob(shape, p);
     return;
   }
 
