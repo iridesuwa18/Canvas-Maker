@@ -1426,12 +1426,15 @@ function rgbToHex(r,g,b){
    - addRate:   how opaque a single Add stroke is (1 = fully replaces, lower = builds up in layers)
    - mixRate:   how fast the Mix brush homogenizes colour (low = streaky/marbled, high = smooth)
    - opacity:   overall translucency of the paint film
-   - granulate: per-pixel texture noise (watercolour pigment granulation) */
+   - granulate: per-pixel texture noise (watercolour pigment granulation)
+   - edgeHardness: <1 sharpens the Add stroke's rim so the palette board
+     doesn't bleed through as a warm/yellow halo; 1 keeps the natural soft
+     falloff (used for watercolour, where a diffuse edge is expected) */
 const PAINT_TYPES = {
-  acrylic:     { label:'Acrylic',     addRate:1.0,  mixRate:0.52, opacity:1.0,  granulate:0 },
-  gouache:     { label:'Gouache',     addRate:1.0,  mixRate:0.62, opacity:1.0,  granulate:0 },
-  oil:         { label:'Oil',         addRate:0.88, mixRate:0.16, opacity:0.98, granulate:0 },
-  watercolour: { label:'Watercolour', addRate:0.5,  mixRate:0.34, opacity:0.62, granulate:0.55 },
+  acrylic:     { label:'Acrylic',     addRate:1.0,  mixRate:0.52, opacity:1.0,  granulate:0,    edgeHardness:0.35 },
+  gouache:     { label:'Gouache',     addRate:1.0,  mixRate:0.62, opacity:1.0,  granulate:0,    edgeHardness:0.4  },
+  oil:         { label:'Oil',         addRate:0.88, mixRate:0.16, opacity:0.98, granulate:0,    edgeHardness:0.5  },
+  watercolour: { label:'Watercolour', addRate:0.5,  mixRate:0.34, opacity:0.62, granulate:0.55, edgeHardness:1    },
 };
 
 const paletteCanvas = document.getElementById('paletteCanvas');
@@ -1632,10 +1635,17 @@ function forEachInRadius(cx,cy,radius,fn){
 
 // Blends `vec` into the field within radius. rate=1 with a hard centre acts like opaque fresh paint;
 // lower rates give a softer, gradual blend (used by the Mix brush).
-function depositAt(cx,cy,radius,vec,rate){
+// `hardness` reshapes the radial falloff before it's used (default 1 = the
+// natural smoothstep curve). Values <1 push the falloff up faster as you
+// move in from the rim, shrinking the low-coverage ring at the edge of a
+// stroke — that ring is where the palette board underneath shows through,
+// which reads as an unwanted warm/yellow fringe on opaque paints. Left at 1
+// for watercolour, where a soft, translucent edge is the point.
+function depositAt(cx,cy,radius,vec,rate,hardness){
+  const h = hardness || 1;
   return forEachInRadius(cx,cy,radius,(x,y,falloff)=>{
     const idx=(y*fieldW+x)*NP;
-    const a = falloff*rate;
+    const a = (h===1 ? falloff : Math.pow(falloff,h))*rate;
     for(let i=0;i<NP;i++){ field[idx+i] += (vec[i]-field[idx+i])*a; }
   });
 }
@@ -2204,7 +2214,7 @@ paletteCanvas.addEventListener('pointerdown',(e)=>{
     const bb = depositAt(p.x,p.y,r,paletteState.mixLoad,typeCfg.mixRate);
     renderRect(bb[0]-1,bb[1]-1,bb[2]+2,bb[3]+2);
   } else {
-    const bb = depositAt(p.x,p.y,r,paletteState.loaded,typeCfg.addRate);
+    const bb = depositAt(p.x,p.y,r,paletteState.loaded,typeCfg.addRate,typeCfg.edgeHardness);
     renderRect(bb[0]-1,bb[1]-1,bb[2]+2,bb[3]+2);
   }
 });
@@ -2237,7 +2247,7 @@ paletteCanvas.addEventListener('pointermove',(e)=>{
       for(let k=0;k<NP;k++) paletteState.mixLoad[k] += (sampled[k]-paletteState.mixLoad[k])*(typeCfg.mixRate*0.8);
       bb = depositAt(x,y,r,paletteState.mixLoad,typeCfg.mixRate);
     } else {
-      bb = depositAt(x,y,r,paletteState.loaded,typeCfg.addRate);
+      bb = depositAt(x,y,r,paletteState.loaded,typeCfg.addRate,typeCfg.edgeHardness);
     }
     minX=Math.min(minX,bb[0]); minY=Math.min(minY,bb[1]);
     maxX=Math.max(maxX,bb[2]); maxY=Math.max(maxY,bb[3]);
