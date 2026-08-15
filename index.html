@@ -382,6 +382,7 @@
     flex-direction:column;
     min-height:0;
     min-width:0;
+    overflow-y:auto;   /* safety net: if content is ever taller than the row, scroll instead of clipping */
   }
   #paletteMain.active{ display:flex; }
 
@@ -554,6 +555,9 @@
   #paletteBoardStack{
     position:relative;
     max-width:100%; max-height:100%;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+    -webkit-user-drag:none;
   }
   #paletteBoardStack canvas{
     display:block;
@@ -561,6 +565,9 @@
     top:0; left:0;
     width:100%; height:100%;
     touch-action:none;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+    -webkit-user-drag:none;
   }
   #paletteBgCanvas{
     border-radius:26px;
@@ -602,6 +609,16 @@
     .current-color{ margin-left:0; }
     .palette-toolbar{ gap:8px; padding:8px 12px; }
     .brush-size-ctl{ order:5; flex-basis:100%; max-width:none; }
+    .pigment-shelf{ padding:8px 12px; gap:8px; }
+    .custom-shelf{ padding:6px 12px; gap:8px; }
+    #paletteBoardWrap{ padding:8px; }
+  }
+  @media(max-height:640px){
+    .pigment-shelf{ padding:6px 12px; gap:8px; }
+    .pigment-tube .cap{ width:30px; height:30px; }
+    .pigment-tube .lbl{ display:none; }
+    .custom-shelf{ padding:5px 12px; gap:8px; }
+    #paletteBoardWrap{ padding:6px; }
   }
 </style>
 </head>
@@ -1426,6 +1443,22 @@ const paletteWetCtx = paletteWetCanvas.getContext('2d');
 const paletteBoardStack = document.getElementById('paletteBoardStack');
 const paletteBoardWrap = document.getElementById('paletteBoardWrap');
 
+// Some embedded/mobile webviews resize the visible viewport (browser chrome
+// showing/hiding, keyboard, etc.) without firing a window 'resize' event —
+// watching the wrap element directly catches those cases too, so the board
+// never ends up sized for a viewport that no longer exists.
+if(typeof ResizeObserver !== 'undefined'){
+  new ResizeObserver(()=>{ if(activeTab==='palette') fitPaletteDisplay(); }).observe(paletteBoardWrap);
+}
+
+// Prevent the palette canvases from being treated like a selectable/draggable
+// image — this is what causes a double-click/double-tap to "select" it.
+[paletteBoardStack, paletteBgCanvas, paletteCanvas, paletteWetCanvas].forEach(el=>{
+  el.addEventListener('dragstart', e=>e.preventDefault());
+  el.addEventListener('selectstart', e=>e.preventDefault());
+  el.addEventListener('contextmenu', e=>e.preventDefault());
+});
+
 let fieldW=0, fieldH=0, field=null;
 let wellGeo=null, wellMask=null;
 
@@ -1826,11 +1859,34 @@ function showToast(msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 1400);
 }
 function copyHexToClipboard(hex){
-  const done = ()=>showToast('Copied '+hex);
+  const showCopied = ()=>showToast('Copied '+hex);
+  const showManual = ()=>showToast(hex+' — tap to select & copy');
+  // Fallback for contexts where the async Clipboard API is blocked (e.g. a
+  // sandboxed iframe without clipboard-write permission) — this older
+  // execCommand approach works in more of those environments.
+  function fallbackCopy(){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = hex;
+      ta.setAttribute('readonly','');
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      ta.style.left = '-1000px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, hex.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(ok) showCopied(); else showManual();
+    } catch(err){
+      showManual();
+    }
+  }
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(hex).then(done).catch(done);
+    navigator.clipboard.writeText(hex).then(showCopied).catch(fallbackCopy);
   } else {
-    done();
+    fallbackCopy();
   }
 }
 
