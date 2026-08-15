@@ -381,19 +381,21 @@
     display:none;
     flex-direction:column;
     min-height:0;
+    min-width:0;
   }
   #paletteMain.active{ display:flex; }
 
   .palette-toolbar{
     display:flex;
     align-items:center;
-    gap:14px;
+    gap:10px;
     flex-wrap:wrap;
     padding:10px 16px;
     background:var(--panel);
     border-bottom:1px solid var(--line);
+    min-width:0;
   }
-  .palette-tools{ display:flex; gap:6px; }
+  .palette-tools{ display:flex; gap:6px; flex:none; }
   .palette-tools button{
     background:var(--panel-2);
     border:1px solid var(--line);
@@ -402,23 +404,67 @@
     border-radius:9px;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;
+    flex:none;
   }
   .palette-tools button.active{
     background:linear-gradient(135deg,var(--umber-light),var(--umber));
     color:#20140a;
     border-color:transparent;
   }
+  .palette-tools button.water-tool.active{
+    background:linear-gradient(135deg,#7fc3e0,#3a86ad);
+    color:#0a222c;
+  }
   .palette-tools button:active{ transform:translateY(1px); }
   .palette-tools svg{ width:18px;height:18px; }
+  .palette-tools button.water-tool{ display:none; }
+  .palette-tools button.water-tool.show{ display:flex; }
+
+  .copy-toggle{
+    display:flex; align-items:center; gap:6px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--ink-dim);
+    padding:0 10px;
+    height:40px;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:11px;
+    font-weight:600;
+    flex:none;
+    white-space:nowrap;
+    font-family:inherit;
+  }
+  .copy-toggle.on{
+    color:#20140a;
+    background:linear-gradient(135deg,var(--umber-light),var(--umber));
+    border-color:transparent;
+  }
+  .copy-toggle svg{ width:14px;height:14px; flex:none; }
+
+  .paint-type-ctl{ display:flex; align-items:center; gap:8px; flex:none; }
+  .paint-type-ctl .lbl{ font-size:11px; color:var(--ink-dim); white-space:nowrap; }
+  #paintTypeSelect{
+    width:auto;
+    min-width:112px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:8px 10px;
+    border-radius:8px;
+    font-size:12.5px;
+    font-weight:600;
+    font-family:inherit;
+  }
 
   .brush-size-ctl{
     display:flex; align-items:center; gap:10px;
-    flex:1; min-width:150px; max-width:240px;
+    flex:1; min-width:130px; max-width:220px;
   }
   .brush-size-ctl .lbl{ font-size:11px; color:var(--ink-dim); white-space:nowrap; }
   .brush-size-ctl .val{ font-size:11px; color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; width:34px; text-align:right; }
 
-  .current-color{ display:flex; align-items:center; gap:9px; margin-left:auto; }
+  .current-color{ display:flex; align-items:center; gap:9px; margin-left:auto; flex:none; }
   .current-color .swatch-big{
     width:34px;height:34px;border-radius:50%;
     border:2px solid var(--line);
@@ -435,8 +481,11 @@
     display:flex; gap:12px;
     padding:12px 16px;
     overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
     background:var(--panel);
     border-bottom:1px solid var(--line);
+    min-width:0;
+    flex:none;
   }
   .pigment-tube{
     flex:none;
@@ -457,23 +506,68 @@
     font-size:9px; color:var(--ink-dim); text-align:center; line-height:1.2;
   }
 
+  .custom-shelf{
+    display:flex; align-items:center; gap:14px;
+    padding:10px 16px;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+    flex:none; flex-wrap:wrap;
+  }
+  .custom-add{ display:flex; align-items:center; gap:6px; flex:none; }
+  .custom-add .lbl{ font-size:11px; color:var(--ink-dim); white-space:nowrap; }
+  #customHexInput{
+    width:92px; font-size:12px; padding:6px 8px;
+    border-radius:6px; border:1px solid var(--line);
+    background:#00000030; color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  #customHexInput.invalid{ border-color:#d15353; }
+  #customHexAdd{
+    font-size:11px; padding:6px 12px; border-radius:6px;
+    border:1px solid var(--line); background:linear-gradient(135deg,var(--umber-light),var(--umber));
+    color:#fff; cursor:pointer; flex:none;
+  }
+  #customHexAdd:active{ transform:translateY(1px); }
+  .custom-swatches{
+    display:flex; gap:12px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    flex:1; min-width:0;
+  }
+  .custom-swatch{ position:relative; }
+  .custom-swatch .del{
+    position:absolute; top:-5px; right:1px;
+    width:15px;height:15px; border-radius:50%;
+    background:#2a2723; color:var(--ink-dim); font-size:10px; line-height:14px; text-align:center;
+    cursor:pointer; border:1px solid var(--line);
+  }
+  .custom-swatch .del:hover{ color:#d15353; border-color:#d15353; }
+  .custom-empty-hint{ font-size:11px; color:var(--ink-dim); font-style:italic; }
+
   #paletteBoardWrap{
-    flex:1; min-height:0;
+    flex:1; min-height:0; min-width:0;
     position:relative;
     display:flex; align-items:center; justify-content:center;
-    padding:22px;
+    padding:18px;
     background:radial-gradient(circle at 50% 30%, #262320 0%, #17140f 80%);
     touch-action:none;
+    overflow:hidden;
   }
-  #paletteCanvas{
-    border-radius:22px;
-    box-shadow:0 25px 60px -15px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.4);
-    background:
-      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 55%),
-      linear-gradient(160deg,#efe9da,#d8cdb2);
+  #paletteBoardStack{
+    position:relative;
     max-width:100%; max-height:100%;
+  }
+  #paletteBoardStack canvas{
+    display:block;
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:100%;
     touch-action:none;
   }
+  #paletteBgCanvas{
+    border-radius:26px;
+    box-shadow:0 25px 60px -15px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.4);
+  }
+  #paletteCanvas{ pointer-events:auto; }
+  #paletteWetCanvas{ pointer-events:none; }
   #paletteHint{
     position:absolute;
     left:24px; bottom:24px;
@@ -482,10 +576,32 @@
     border:1px solid var(--line);
     padding:8px 11px;
     border-radius:10px;
+    pointer-events:none;
   }
+  #copyToast{
+    position:absolute;
+    top:16px; left:50%;
+    transform:translate(-50%,-12px);
+    background:rgba(20,18,15,.92);
+    border:1px solid var(--umber-light);
+    color:var(--ink);
+    padding:7px 14px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:600;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+    z-index:8;
+    white-space:nowrap;
+  }
+  #copyToast.show{ opacity:1; transform:translate(-50%,0); }
+
   @media(max-width:640px){
     #paletteHint{ display:none; }
     .current-color{ margin-left:0; }
+    .palette-toolbar{ gap:8px; padding:8px 12px; }
+    .brush-size-ctl{ order:5; flex-basis:100%; max-width:none; }
   }
 </style>
 </head>
@@ -589,10 +705,28 @@
         <button data-ptool="eye" title="Eyedropper — pick a colour from the palette">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 2.5l4 4-3 3-4-4 3-3z"/><path d="M15.5 5.5L5 16l-1.5 4.5L8 19 18.5 8.5"/></svg>
         </button>
+        <button data-ptool="water" class="water-tool" title="Water — press and hold in a well to swirl its colours toward the centre and thin them out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.7s6 7 6 11.3a6 6 0 11-12 0c0-4.3 6-11.3 6-11.3z"/><path d="M9.5 14.2a2.5 2.5 0 002.5 2.5"/></svg>
+        </button>
+      </div>
+
+      <button class="copy-toggle on" id="copyHexToggle" title="Copy the hex code to your clipboard whenever the eyedropper picks a colour">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M8 4H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/></svg>
+        <span id="copyHexLabel">Copy hex: On</span>
+      </button>
+
+      <div class="paint-type-ctl">
+        <span class="lbl">Paint</span>
+        <select id="paintTypeSelect">
+          <option value="acrylic">Acrylic</option>
+          <option value="gouache">Gouache</option>
+          <option value="oil">Oil</option>
+          <option value="watercolour">Watercolour</option>
+        </select>
       </div>
 
       <div class="brush-size-ctl">
-        <span class="lbl">Brush</span>
+        <span class="lbl" id="paletteSizeLbl">Brush</span>
         <input type="range" id="paletteBrushSize" min="8" max="120" value="46">
         <span class="val" id="paletteSizeVal">46px</span>
       </div>
@@ -607,9 +741,23 @@
 
     <div class="pigment-shelf" id="pigmentShelf"></div>
 
+    <div class="custom-shelf" id="customShelf">
+      <div class="custom-add">
+        <span class="lbl">Insert colour</span>
+        <input type="text" id="customHexInput" placeholder="#RRGGBB" maxlength="7" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button id="customHexAdd">+ Add</button>
+      </div>
+      <div class="custom-swatches" id="customSwatches"></div>
+    </div>
+
     <div id="paletteBoardWrap">
-      <canvas id="paletteCanvas"></canvas>
-      <div id="paletteHint" class="hint">Tap a tube to load the Add brush. Add deposits paint without mixing; Mix blends whatever paint it drags through, weighted by how much of each colour is there.</div>
+      <div id="paletteBoardStack">
+        <canvas id="paletteBgCanvas"></canvas>
+        <canvas id="paletteCanvas"></canvas>
+        <canvas id="paletteWetCanvas"></canvas>
+      </div>
+      <div id="copyToast">Copied</div>
+      <div id="paletteHint" class="hint">Tap a tube to load the Add brush, then paint into one of the wells. Add deposits paint without mixing; Mix blends whatever it drags through.</div>
     </div>
   </div>
 </div>
@@ -1072,6 +1220,8 @@ function activateTab(tab){
     if(!paletteInited){
       paletteInited = true;
       initPalette();
+    } else {
+      fitPaletteDisplay();
     }
   } else {
     fitToScreen();
@@ -1084,12 +1234,19 @@ document.getElementById('helpBtn').addEventListener('click',()=>{
   if(activeTab==='canvas'){
     alert('CanvasMaker generates paper texture purely from math — layered noise, a woven-thread pattern, and simulated lighting off a height map. No stock images.\n\nDrag with one finger to pan. Scroll / pinch to zoom. Regenerating the paper replaces the current sheet.');
   } else {
-    alert('The Palette mixes paint the way real pigments do (a Kubelka-Munk style subtractive model), not a simple digital blend.\n\nTap a tube to load it, then use Add to lay fresh paint down — it does not blend with paint already there, just like squeezing paint from a tube. Switch to Mix to drag a brush through the paint: it picks up colour from whatever it passes over (more of a colour there means more influence on the result) and smears it around, so repeated strokes gradually homogenize the mixture. Use the Eyedropper to pick up any colour already mixed on the palette. Wash palette clears everything.');
+    alert('The Palette mixes paint the way real pigments do (a Kubelka-Munk style subtractive model), not a simple digital blend.\n\nTap a tube to load it, then use Add to lay fresh paint into one of the wells — it does not blend with paint already there, just like squeezing paint from a tube. Switch to Mix to drag a brush through the paint: it picks up colour from whatever it passes over and smears it around. Use the Eyedropper to pick up any colour already mixed on the palette — toggle "Copy hex" to also copy the picked colour to your clipboard.\n\nChoose Acrylic, Gouache, Oil or Watercolour from the Paint menu: each mixes differently — oil stays streaky and marbled, watercolour is translucent and granulated. In Watercolour mode a Water tool appears — press and hold anywhere in a well and everything in it swirls toward the centre, blending together and thinning out the longer you hold, like real water stirred into pigment. Wash palette clears everything.');
   }
 });
 
 window.addEventListener('resize', ()=>{
   if(activeTab==='canvas') fitToScreen();
+  else if(activeTab==='palette') fitPaletteDisplay();
+});
+window.addEventListener('orientationchange', ()=>{
+  setTimeout(()=>{
+    if(activeTab==='canvas') fitToScreen();
+    else if(activeTab==='palette') fitPaletteDisplay();
+  }, 250);
 });
 
 /* ============================================================
@@ -1123,7 +1280,10 @@ const PIGMENTS = [
   { name:'Burnt Sienna',     hex:'#93401F', strength:0.55 },
   { name:'Raw Umber',        hex:'#5B4632', strength:0.50 },
 ];
-const NP = PIGMENTS.length;
+const NP_BASE = PIGMENTS.length;
+const MAX_CUSTOM = 12;
+const NP = NP_BASE + MAX_CUSTOM;
+const customColors = new Array(MAX_CUSTOM).fill(null); // {hex} per custom slot, or null if unused
 const pigK = new Float32Array(NP*3), pigS = new Float32Array(NP*3);
 PIGMENTS.forEach((p,i)=>{
   const rgb = hexToRgb01(p.hex);
@@ -1134,6 +1294,28 @@ PIGMENTS.forEach((p,i)=>{
     pigS[i*3+ch] = p.strength;
   }
 });
+
+// Custom (user-inserted hex) colours get the same Kubelka–Munk treatment as
+// the built-in tubes, just written into reserved slots past NP_BASE so the
+// rest of the mixing/deposit/sample code (which just loops 0..NP-1) needs
+// no changes to understand them.
+const CUSTOM_STRENGTH = 0.8;
+function setCustomPigmentSlot(slot, hex){
+  const rgb = hexToRgb01(hex);
+  const base = (NP_BASE+slot)*3;
+  for(let ch=0; ch<3; ch++){
+    const r = Math.min(0.995, Math.max(0.006, rgb[ch]));
+    const ks = (1-r)*(1-r)/(2*r);
+    pigK[base+ch] = ks*CUSTOM_STRENGTH;
+    pigS[base+ch] = CUSTOM_STRENGTH;
+  }
+  customColors[slot] = { hex };
+}
+function clearCustomPigmentSlot(slot){
+  const base = (NP_BASE+slot)*3;
+  for(let ch=0; ch<3; ch++){ pigK[base+ch]=0; pigS[base+ch]=0; }
+  customColors[slot] = null;
+}
 
 function kmReflect(ratio){
   const r = 1 + ratio - Math.sqrt(ratio*ratio + 2*ratio);
@@ -1158,36 +1340,179 @@ function rgbToHex(r,g,b){
   return '#'+h(r)+h(g)+h(b);
 }
 
+/* Each paint type behaves differently when laid down and mixed:
+   - addRate:   how opaque a single Add stroke is (1 = fully replaces, lower = builds up in layers)
+   - mixRate:   how fast the Mix brush homogenizes colour (low = streaky/marbled, high = smooth)
+   - opacity:   overall translucency of the paint film
+   - granulate: per-pixel texture noise (watercolour pigment granulation) */
+const PAINT_TYPES = {
+  acrylic:     { label:'Acrylic',     addRate:1.0,  mixRate:0.52, opacity:1.0,  granulate:0 },
+  gouache:     { label:'Gouache',     addRate:1.0,  mixRate:0.62, opacity:1.0,  granulate:0 },
+  oil:         { label:'Oil',         addRate:0.88, mixRate:0.16, opacity:0.98, granulate:0 },
+  watercolour: { label:'Watercolour', addRate:0.5,  mixRate:0.34, opacity:0.62, granulate:0.55 },
+};
+
 const paletteCanvas = document.getElementById('paletteCanvas');
 const paletteCtx = paletteCanvas.getContext('2d');
+const paletteBgCanvas = document.getElementById('paletteBgCanvas');
+const paletteBgCtx = paletteBgCanvas.getContext('2d');
+const paletteWetCanvas = document.getElementById('paletteWetCanvas');
+const paletteWetCtx = paletteWetCanvas.getContext('2d');
+const paletteBoardStack = document.getElementById('paletteBoardStack');
 const paletteBoardWrap = document.getElementById('paletteBoardWrap');
 
 let fieldW=0, fieldH=0, field=null;
+let wellGeo=null, wellMask=null;
 
 const paletteState = {
-  tool: 'add',            // 'add' | 'mix' | 'eye'
+  tool: 'add',            // 'add' | 'mix' | 'eye' | 'water'
   brushSize: 46,
+  waterVolume: 55,         // 0-100 — how much water the water tool adds per touch (swaps in for brush size)
   loaded: new Float32Array(NP),   // pigment vector the Add brush currently deposits
   mixLoad: new Float32Array(NP),  // pigment vector currently carried by the Mix brush
   selectedPigment: 5,
+  paintType: 'acrylic',
+  copyOnPick: true,
+  wetBlobs: [],            // active swirling wells: {shape, strength}
+  waterHold: null,         // the well/mix-area shape currently held with the water tool, or null
 };
 
-function initPaletteCanvas(){
+// Computes how big the palette board should be to fit the current wrap size,
+// keeping a fixed aspect ratio so circular wells never distort into ellipses.
+function computeBoardSize(){
   const rect = paletteBoardWrap.getBoundingClientRect();
-  const pad = 44;
+  const pad = 6;
   const availW = Math.max(200, rect.width - pad*2);
   const availH = Math.max(160, rect.height - pad*2);
   let w = availW, h = availW*0.6;
   if(h > availH){ h = availH; w = availH/0.6; }
   const dpr = Math.min(2, window.devicePixelRatio||1);
+  return { w, h, dpr };
+}
+
+// Lays out a fixed set of circular wells along the top arc of the board plus
+// one larger circular mixing area — like blobs of paint squeezed around the
+// rim of a real palette with open space in the middle to mix them.
+function computeWellGeometry(){
+  const nWells = 7;
+  const marginX = fieldW*0.11, marginY = fieldH*0.17;
+  const arcW = fieldW - marginX*2;
+  const wellR = Math.min(fieldW,fieldH)*0.082;
+  const wells = [];
+  for(let i=0;i<nWells;i++){
+    const t = nWells===1 ? 0.5 : i/(nWells-1);
+    const cx = marginX + t*arcW;
+    const cy = marginY + Math.sin(t*Math.PI)*(fieldH*0.05);
+    wells.push({ cx, cy, r:wellR });
+  }
+  const mix = { cx: fieldW*0.5, cy: fieldH*0.68, r: Math.min(fieldW,fieldH)*0.34 };
+  return { wells, mix };
+}
+
+// A pixel is only ever paintable/visible if it falls inside a well or the
+// mixing area — this is what makes the board read as a palette with holes
+// rather than a plain rectangle.
+function buildWellMask(){
+  wellMask = new Uint8Array(fieldW*fieldH);
+  const shapes = wellGeo.wells.concat([wellGeo.mix]);
+  for(let y=0;y<fieldH;y++){
+    const rowBase = y*fieldW;
+    for(let x=0;x<fieldW;x++){
+      let inside = false;
+      for(let s=0;s<shapes.length;s++){
+        const sh = shapes[s], dx=x-sh.cx, dy=y-sh.cy;
+        if(dx*dx+dy*dy <= sh.r*sh.r){ inside = true; break; }
+      }
+      wellMask[rowBase+x] = inside ? 1 : 0;
+    }
+  }
+}
+
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function drawWellIndent(ctx, well, isMix){
+  const {cx,cy,r} = well;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.clip();
+  const rg = ctx.createRadialGradient(cx,cy,r*0.15,cx,cy,r);
+  rg.addColorStop(0,'rgba(0,0,0,0.05)');
+  rg.addColorStop(0.65, isMix ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.14)');
+  rg.addColorStop(1,'rgba(0,0,0,0.32)');
+  ctx.fillStyle = rg;
+  ctx.fillRect(cx-r,cy-r,r*2,r*2);
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.lineWidth = Math.max(1, r*0.045);
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Draws the wooden palette slab + well/mix-area indentations onto the
+// background canvas that sits beneath the (mostly transparent) paint canvas.
+function drawPaletteBoard(){
+  const ctx = paletteBgCtx;
+  ctx.clearRect(0,0,fieldW,fieldH);
+  ctx.save();
+  const r = Math.min(fieldW,fieldH)*0.12;
+  roundRectPath(ctx,0,0,fieldW,fieldH,r);
+  ctx.clip();
+  const g = ctx.createLinearGradient(0,0,fieldW,fieldH);
+  g.addColorStop(0,'#efe6d2');
+  g.addColorStop(0.5,'#ddd0ac');
+  g.addColorStop(1,'#c9b98c');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,fieldW,fieldH);
+  const vg = ctx.createRadialGradient(fieldW*0.4,fieldH*0.3,fieldW*0.1, fieldW*0.5,fieldH*0.5, fieldW*0.75);
+  vg.addColorStop(0,'rgba(255,255,255,0.18)');
+  vg.addColorStop(1,'rgba(0,0,0,0.12)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0,0,fieldW,fieldH);
+  ctx.restore();
+
+  wellGeo.wells.forEach(w=>drawWellIndent(ctx,w,false));
+  drawWellIndent(ctx, wellGeo.mix, true);
+}
+
+function initPaletteCanvas(){
+  const {w,h,dpr} = computeBoardSize();
   fieldW = Math.max(140, Math.round(w*dpr));
   fieldH = Math.max(100, Math.round(h*dpr));
-  paletteCanvas.width = fieldW;
-  paletteCanvas.height = fieldH;
-  paletteCanvas.style.width = Math.round(w)+'px';
-  paletteCanvas.style.height = Math.round(h)+'px';
+  paletteCanvas.width = fieldW; paletteCanvas.height = fieldH;
+  paletteBgCanvas.width = fieldW; paletteBgCanvas.height = fieldH;
+  paletteWetCanvas.width = fieldW; paletteWetCanvas.height = fieldH;
+  paletteBoardStack.style.width = Math.round(w)+'px';
+  paletteBoardStack.style.height = Math.round(h)+'px';
   field = new Float32Array(fieldW*fieldH*NP);
   paletteCtx.clearRect(0,0,fieldW,fieldH);
+  paletteWetCtx.clearRect(0,0,fieldW,fieldH);
+  paletteState.wetBlobs = [];
+  paletteState.waterHold = null;
+  stopWetLoop();
+  wellGeo = computeWellGeometry();
+  buildWellMask();
+  drawPaletteBoard();
+}
+
+// Called on window resize / orientation change: just rescales the on-screen
+// size (uniformly, so wells stay circular) without touching the paint data.
+function fitPaletteDisplay(){
+  if(!field) return;
+  const {w,h} = computeBoardSize();
+  paletteBoardStack.style.width = Math.round(w)+'px';
+  paletteBoardStack.style.height = Math.round(h)+'px';
 }
 
 function smoothstep(t){ return t*t*(3-2*t); }
@@ -1232,26 +1557,34 @@ function sampleAt(cx,cy,radius){
 }
 
 const FULL_COVERAGE = 1.0;
+function hashNoise(x,y){
+  const s = Math.sin(x*12.9898+y*78.233)*43758.5453;
+  return s - Math.floor(s);
+}
 function renderRect(x0,y0,x1,y1){
   x0=Math.max(0,x0|0); y0=Math.max(0,y0|0);
   x1=Math.min(fieldW,x1|0); y1=Math.min(fieldH,y1|0);
   const w=x1-x0, h=y1-y0;
-  if(w<=0||h<=0) return;
+  if(w<=0||h<=0 || !wellMask) return;
   const img = paletteCtx.createImageData(w,h);
   const data = img.data;
   const vec = new Float32Array(NP);
+  const typeCfg = PAINT_TYPES[paletteState.paintType];
   for(let y=0;y<h;y++){
     for(let x=0;x<w;x++){
       const fx=x0+x, fy=y0+y;
+      const o=(y*w+x)*4;
+      if(!wellMask[fy*fieldW+fx]){ data[o+3]=0; continue; }
       const base=(fy*fieldW+fx)*NP;
       for(let i=0;i<NP;i++) vec[i]=field[base+i];
       const res = mixVecToRgb(vec);
-      const o=(y*w+x)*4;
-      if(!res){ data[o+3]=0; }
-      else{
-        const alpha = Math.min(1, res[3]/FULL_COVERAGE);
-        data[o]=res[0]*255; data[o+1]=res[1]*255; data[o+2]=res[2]*255; data[o+3]=alpha*255;
+      if(!res){ data[o+3]=0; continue; }
+      let alpha = Math.min(1, res[3]/FULL_COVERAGE) * typeCfg.opacity;
+      if(typeCfg.granulate>0){
+        alpha *= 1 - typeCfg.granulate*0.35*hashNoise(fx,fy);
       }
+      alpha = Math.max(0, Math.min(1, alpha));
+      data[o]=res[0]*255; data[o+1]=res[1]*255; data[o+2]=res[2]*255; data[o+3]=alpha*255;
     }
   }
   paletteCtx.putImageData(img,x0,y0);
@@ -1278,14 +1611,51 @@ function buildPigmentShelf(){
     const d = document.createElement('div');
     d.className = 'pigment-tube'+(i===paletteState.selectedPigment ? ' active' : '');
     d.title = p.name;
+    d.dataset.pidx = i;
     d.innerHTML = `<div class="cap" style="background:${p.hex}"></div><div class="lbl">${p.name}</div>`;
     d.addEventListener('click', ()=>selectPigment(i));
     el.appendChild(d);
   });
 }
+
+// Renders the saved custom-hex swatches in their own strip, separate from
+// the fixed pigment tubes, each with a small delete control.
+function buildCustomShelf(){
+  const el = document.getElementById('customSwatches');
+  el.innerHTML = '';
+  let any = false;
+  customColors.forEach((c,slot)=>{
+    if(!c) return;
+    any = true;
+    const i = NP_BASE+slot;
+    const d = document.createElement('div');
+    d.className = 'pigment-tube custom-swatch'+(i===paletteState.selectedPigment ? ' active' : '');
+    d.title = c.hex.toUpperCase();
+    d.dataset.pidx = i;
+    d.innerHTML = `<div class="cap" style="background:${c.hex}"></div><div class="lbl">${c.hex.toUpperCase()}</div><div class="del" title="Remove this colour">×</div>`;
+    d.querySelector('.cap').addEventListener('click', ()=>selectPigment(i));
+    d.querySelector('.lbl').addEventListener('click', ()=>selectPigment(i));
+    d.querySelector('.del').addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      clearCustomPigmentSlot(slot);
+      if(paletteState.selectedPigment===i) selectPigment(0);
+      buildCustomShelf();
+    });
+    el.appendChild(d);
+  });
+  const hintEl = document.getElementById('customEmptyHint');
+  if(!any){
+    const h = document.createElement('div');
+    h.id = 'customEmptyHint';
+    h.className = 'custom-empty-hint';
+    h.textContent = 'No custom colours yet — paste a hex code above.';
+    el.appendChild(h);
+  }
+}
+
 function highlightShelf(i){
-  document.querySelectorAll('.pigment-tube').forEach((el,idx)=>{
-    el.classList.toggle('active', idx===i);
+  document.querySelectorAll('[data-pidx]').forEach(el=>{
+    el.classList.toggle('active', +el.dataset.pidx===i);
   });
 }
 function selectPigment(i){
@@ -1297,27 +1667,326 @@ function selectPigment(i){
   setPaletteTool('add');
 }
 
+function updatePaletteHint(){
+  const hint = document.getElementById('paletteHint');
+  if(!hint) return;
+  const type = PAINT_TYPES[paletteState.paintType].label;
+  if(paletteState.tool==='water'){
+    hint.textContent = 'Water tool: press and hold anywhere in a well — the colours in it swirl toward the centre, blending and thinning out the longer you hold.';
+  } else {
+    hint.textContent = `Painting with ${type}. Tap a tube to load Add, then paint into a well. Add deposits paint without mixing; Mix blends whatever it drags through.`;
+  }
+}
+
+// The brush-size slider doubles up as a water-volume slider: same control,
+// different range/label/units depending on which tool is active.
+function syncSizeSlider(){
+  const input = document.getElementById('paletteBrushSize');
+  const lbl = document.getElementById('paletteSizeLbl');
+  const val = document.getElementById('paletteSizeVal');
+  if(paletteState.tool==='water'){
+    lbl.textContent = 'Water';
+    input.min = 10; input.max = 100;
+    input.value = paletteState.waterVolume;
+    val.textContent = Math.round(paletteState.waterVolume)+'%';
+  } else {
+    lbl.textContent = 'Brush';
+    input.min = 8; input.max = 120;
+    input.value = paletteState.brushSize;
+    val.textContent = Math.round(paletteState.brushSize)+'px';
+  }
+}
+
 function setPaletteTool(t){
+  if(t==='water' && paletteState.paintType!=='watercolour') return;
   paletteState.tool = t;
+  if(t!=='water') paletteState.waterHold = null;
   document.querySelectorAll('.palette-tools button').forEach(b=>{
     b.classList.toggle('active', b.dataset.ptool===t);
   });
+  syncSizeSlider();
+  updatePaletteHint();
 }
 document.querySelectorAll('.palette-tools button').forEach(b=>{
   b.addEventListener('click', ()=>setPaletteTool(b.dataset.ptool));
 });
 
 document.getElementById('paletteBrushSize').addEventListener('input',(e)=>{
-  paletteState.brushSize = +e.target.value;
-  document.getElementById('paletteSizeVal').textContent = paletteState.brushSize+'px';
+  const v = +e.target.value;
+  if(paletteState.tool==='water'){
+    paletteState.waterVolume = v;
+    document.getElementById('paletteSizeVal').textContent = v+'%';
+  } else {
+    paletteState.brushSize = v;
+    document.getElementById('paletteSizeVal').textContent = v+'px';
+  }
 });
 
 document.getElementById('washBtn').addEventListener('click', ()=>{
   if(!field) return;
   field.fill(0);
+  paletteState.wetBlobs = [];
+  paletteState.waterHold = null;
+  stopWetLoop();
   paletteCtx.clearRect(0,0,fieldW,fieldH);
+  paletteWetCtx.clearRect(0,0,fieldW,fieldH);
   updateCurrentColorDisplay(paletteState.loaded);
 });
+
+const paintTypeSelect = document.getElementById('paintTypeSelect');
+paintTypeSelect.addEventListener('change', ()=>{
+  paletteState.paintType = paintTypeSelect.value;
+  const isWater = paletteState.paintType === 'watercolour';
+  document.querySelector('.water-tool').classList.toggle('show', isWater);
+  if(!isWater && paletteState.tool==='water') setPaletteTool('add');
+  if(!isWater){ paletteState.wetBlobs = []; paletteState.waterHold = null; stopWetLoop(); paletteWetCtx.clearRect(0,0,fieldW,fieldH); }
+  updatePaletteHint();
+  if(field) renderRect(0,0,fieldW,fieldH);
+});
+
+const copyHexToggle = document.getElementById('copyHexToggle');
+const copyHexLabel = document.getElementById('copyHexLabel');
+copyHexToggle.addEventListener('click', ()=>{
+  paletteState.copyOnPick = !paletteState.copyOnPick;
+  copyHexToggle.classList.toggle('on', paletteState.copyOnPick);
+  copyHexLabel.textContent = 'Copy hex: ' + (paletteState.copyOnPick ? 'On' : 'Off');
+});
+
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('copyToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1400);
+}
+function copyHexToClipboard(hex){
+  const done = ()=>showToast('Copied '+hex);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(hex).then(done).catch(done);
+  } else {
+    done();
+  }
+}
+
+/* ---------- insert / save a custom hex colour ---------- */
+function normalizeHex(raw){
+  if(!raw) return null;
+  let s = raw.trim().replace(/^#/,'');
+  if(/^[0-9a-fA-F]{3}$/.test(s)){
+    s = s.split('').map(c=>c+c).join('');
+  }
+  if(!/^[0-9a-fA-F]{6}$/.test(s)) return null;
+  return '#'+s.toLowerCase();
+}
+const customHexInput = document.getElementById('customHexInput');
+const customHexAdd = document.getElementById('customHexAdd');
+function insertCustomHex(){
+  const hex = normalizeHex(customHexInput.value);
+  if(!hex){
+    customHexInput.classList.add('invalid');
+    showToast('Not a valid hex code');
+    return;
+  }
+  customHexInput.classList.remove('invalid');
+  let slot = customColors.findIndex(c=>c===null);
+  if(slot===-1){
+    // shelf full — reuse the oldest slot rather than silently failing
+    slot = 0;
+    showToast('Custom colours full — replacing oldest');
+  }
+  setCustomPigmentSlot(slot, hex);
+  buildCustomShelf();
+  selectPigment(NP_BASE+slot);
+  customHexInput.value = '';
+}
+customHexAdd.addEventListener('click', insertCustomHex);
+customHexInput.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter') insertCustomHex();
+  else customHexInput.classList.remove('invalid');
+});
+customHexInput.addEventListener('paste', ()=>{
+  // let the pasted value land, then normalize/validate on next tick
+  setTimeout(()=>{ customHexInput.classList.remove('invalid'); }, 0);
+});
+
+/* ---------- water tool: swirls whatever's in a well toward its centre ---------- */
+// Rather than a localized brush effect, water acts on the whole well (or the
+// mixing area) you're touching — like dropping water into a real palette
+// hole: everything in it starts spiralling toward the middle, blending as it
+// goes, and thinning out (losing strength/opacity) the longer it swirls.
+const SWIRL_ANGSTEP = 0.20;   // radians rotated per tick — visible spin speed
+const SWIRL_PULL = 0.07;      // how hard the swirl drags colour in toward centre, per tick
+const SWIRL_BLEND = 0.55;     // how much of each tick's swirled sample replaces the old pixel
+const SWIRL_DIFFUSE = 0.22;   // extra soft blur mixed in alongside the swirl, so colours melt together instead of streaking
+const WATER_DILUTE_RATE = 0.035; // per-tick thinning — the actual "watering down"
+let wetTimer = null;
+function startWetLoop(){
+  if(wetTimer) return;
+  wetTimer = setInterval(wetTick, 90);
+}
+function stopWetLoop(){
+  if(wetTimer){ clearInterval(wetTimer); wetTimer = null; }
+}
+
+// Finds which well (or the big mixing area) a point falls inside, or null
+// if it's over a gap between them — this is what the water tool grabs onto.
+function findWaterShape(x,y){
+  for(const w of wellGeo.wells){
+    const dx=x-w.cx, dy=y-w.cy;
+    if(dx*dx+dy*dy <= w.r*w.r) return w;
+  }
+  const m = wellGeo.mix;
+  const dx=x-m.cx, dy=y-m.cy;
+  if(dx*dx+dy*dy <= m.r*m.r) return m;
+  return null;
+}
+
+function addWetBlob(shape){
+  if(!shape) return;
+  const vol = paletteState.waterVolume/100;       // 0..1 — how much water is being added
+  const cap = 0.5 + 0.6*vol;                       // more water -> can build to a stronger, longer-lived swirl
+  const pulse = 0.22 + 0.45*vol;                   // more water -> each touch adds more strength
+  const blobs = paletteState.wetBlobs;
+  let b = blobs.find(bl=>bl.shape===shape);
+  if(b){ b.strength = Math.min(cap, b.strength+pulse); b.volume = vol; }
+  else { blobs.push({shape, strength:Math.min(cap, pulse+0.15), volume:vol}); }
+  startWetLoop();
+  renderWetOverlay();
+}
+
+// Draws every actively-wet well as a translucent, glossy puddle filling the
+// whole hole — a soft shadowed rim plus a bright specular highlight — so
+// the water tool reads visually even in the instant before the swirl has
+// visibly moved any pigment.
+function renderWetOverlay(){
+  paletteWetCtx.clearRect(0,0,fieldW,fieldH);
+  const blobs = paletteState.wetBlobs;
+  for(const b of blobs){
+    const alpha = Math.max(0, Math.min(1, b.strength));
+    if(alpha<=0.01) continue;
+    const {cx,cy,r} = b.shape;
+    const ctx = paletteWetCtx;
+    ctx.save();
+    ctx.shadowColor = `rgba(15,35,50,${0.38*alpha})`;
+    ctx.shadowBlur = r*0.5;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r*0.94,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.fill();
+    ctx.restore();
+
+    const rg = ctx.createRadialGradient(cx,cy,0, cx,cy,r);
+    rg.addColorStop(0,   `rgba(210,232,238,${0.16*alpha})`);
+    rg.addColorStop(0.55,`rgba(165,205,220,${0.20*alpha})`);
+    rg.addColorStop(0.85,`rgba(110,165,185,${0.30*alpha})`);
+    rg.addColorStop(1,   `rgba(70,120,140,0)`);
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fill();
+
+    const hg = ctx.createRadialGradient(cx-r*0.32,cy-r*0.32,0, cx-r*0.32,cy-r*0.32,r*0.5);
+    hg.addColorStop(0, `rgba(255,255,255,${0.45*alpha})`);
+    hg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hg;
+    ctx.beginPath();
+    ctx.ellipse(cx-r*0.32,cy-r*0.32, r*0.42, r*0.3, -0.6, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+const swirlCosA = Math.cos(SWIRL_ANGSTEP), swirlSinA = Math.sin(SWIRL_ANGSTEP);
+
+// Smooth (bilinear) read of the field at a fractional pixel coordinate —
+// this is what keeps the swirl looking like soft melting colour instead of
+// jagged nearest-pixel spiral arms.
+const _bilinTmp = new Float32Array(NP);
+const _blurTmp = new Float32Array(NP);
+function sampleFieldBilinear(fx, fy, out){
+  const x0f = Math.floor(fx), y0f = Math.floor(fy);
+  const tx = fx-x0f, ty = fy-y0f;
+  const x0 = Math.max(0,Math.min(fieldW-1,x0f)), x1 = Math.max(0,Math.min(fieldW-1,x0f+1));
+  const y0 = Math.max(0,Math.min(fieldH-1,y0f)), y1 = Math.max(0,Math.min(fieldH-1,y0f+1));
+  const i00=(y0*fieldW+x0)*NP, i10=(y0*fieldW+x1)*NP, i01=(y1*fieldW+x0)*NP, i11=(y1*fieldW+x1)*NP;
+  for(let i=0;i<NP;i++){
+    const top = field[i00+i]*(1-tx) + field[i10+i]*tx;
+    const bot = field[i01+i]*(1-tx) + field[i11+i]*tx;
+    out[i] = top*(1-ty) + bot*ty;
+  }
+}
+
+function wetTick(){
+  // While the pointer is held down with the water tool, keep re-wetting
+  // whichever well it's over every tick — even if it isn't moving — so a
+  // stationary press keeps swirling instead of fizzling out after one pulse.
+  if(paletteState.waterHold) addWetBlob(paletteState.waterHold);
+
+  const blobs = paletteState.wetBlobs;
+  if(!blobs.length || !field){ stopWetLoop(); paletteWetCtx.clearRect(0,0,fieldW,fieldH); return; }
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  for(let bi=blobs.length-1; bi>=0; bi--){
+    const b = blobs[bi];
+    const vol = b.volume!=null ? b.volume : 0.5;   // how much water is in this well right now
+    const {cx,cy,r} = b.shape;
+    const pull = 1 + SWIRL_PULL*b.strength*(0.7+0.6*vol);   // more water pulls colour in harder
+    const blend = SWIRL_BLEND*b.strength;
+    const diffuse = SWIRL_DIFFUSE*b.strength*(0.5+1.0*vol); // more water blends/softens more
+    // dilution ramps up steeply with volume — low/default settings barely
+    // thin the paint, only a heavy pour near the top of the slider washes
+    // it out fast
+    const dilute = WATER_DILUTE_RATE*b.strength*(0.12+1.9*vol*vol*vol);
+    const blurD = r*(0.045+0.05*vol); // how wide the soft-blur taps spread — more water spreads colour further
+    const x0=Math.max(0,Math.floor(cx-r)), x1=Math.min(fieldW-1,Math.ceil(cx+r));
+    const y0=Math.max(0,Math.floor(cy-r)), y1=Math.min(fieldH-1,Math.ceil(cy+r));
+    const r2 = r*r;
+    for(let y=y0;y<=y1;y++){
+      const dy=y-cy;
+      for(let x=x0;x<=x1;x++){
+        const dx=x-cx;
+        if(dx*dx+dy*dy>r2) continue;
+        // rotate (dx,dy) backward one step and push it outward — the point
+        // that "flows into" this pixel next tick if the whole hole is
+        // spinning and draining toward its centre
+        let rx = dx*swirlCosA + dy*swirlSinA;
+        let ry = -dx*swirlSinA + dy*swirlCosA;
+        rx *= pull; ry *= pull;
+        const sr2 = rx*rx+ry*ry;
+        if(sr2 > r2){ const sc = r/Math.sqrt(sr2)*0.999; rx*=sc; ry*=sc; }
+        const sfx = cx+rx, sfy = cy+ry;
+        sampleFieldBilinear(sfx, sfy, _bilinTmp);
+        // a soft 4-tap blur around the swirl sample — this is the actual
+        // spatial diffusion that makes colours melt into each other instead
+        // of just riding the rotation as thin streaks
+        sampleFieldBilinear(sfx+blurD, sfy, _blurTmp);
+        for(let i=0;i<NP;i++) _bilinTmp[i]+=_blurTmp[i];
+        sampleFieldBilinear(sfx-blurD, sfy, _blurTmp);
+        for(let i=0;i<NP;i++) _bilinTmp[i]+=_blurTmp[i];
+        sampleFieldBilinear(sfx, sfy+blurD, _blurTmp);
+        for(let i=0;i<NP;i++) _bilinTmp[i]+=_blurTmp[i];
+        sampleFieldBilinear(sfx, sfy-blurD, _blurTmp);
+        for(let i=0;i<NP;i++){ _bilinTmp[i] = (_bilinTmp[i]+_blurTmp[i])/5; }
+
+        const idx=(y*fieldW+x)*NP;
+        for(let i=0;i<NP;i++){
+          // swirl toward the rotated (now blurred) sample, then melt a
+          // little further toward it — two soft passes read as smooth
+          // mixing rather than a spinning streak
+          let v = field[idx+i] + (_bilinTmp[i]-field[idx+i])*blend;
+          v = v + (_bilinTmp[i]-v)*diffuse;
+          field[idx+i] = v*(1-dilute);
+        }
+      }
+    }
+    minX=Math.min(minX,x0); minY=Math.min(minY,y0);
+    maxX=Math.max(maxX,x1); maxY=Math.max(maxY,y1);
+    b.strength *= (0.88 + 0.05*vol);   // more water keeps the swirl alive a little longer
+    if(b.strength < 0.04) blobs.splice(bi,1);
+  }
+  if(maxX>=minX) renderRect(minX-1,minY-1,maxX+2,maxY+2);
+  renderWetOverlay();
+  if(!blobs.length) stopWetLoop();
+}
 
 /* ---------- palette pointer handling ---------- */
 let paletteDrawing = false;
@@ -1348,6 +2017,10 @@ paletteCanvas.addEventListener('pointerdown',(e)=>{
       paletteState.loaded = vec;
       highlightShelf(-1);
       updateCurrentColorDisplay(vec);
+      if(paletteState.copyOnPick){
+        const res = mixVecToRgb(vec);
+        if(res) copyHexToClipboard(rgbToHex(res[0],res[1],res[2]).toUpperCase());
+      }
     }
     return;
   }
@@ -1355,13 +2028,21 @@ paletteCanvas.addEventListener('pointerdown',(e)=>{
   paletteDrawing = true;
   paletteLast = p;
 
+  if(paletteState.tool==='water'){
+    const shape = findWaterShape(p.x,p.y);
+    paletteState.waterHold = shape;
+    if(shape) addWetBlob(shape);
+    return;
+  }
+
+  const typeCfg = PAINT_TYPES[paletteState.paintType];
   if(paletteState.tool==='mix'){
     paletteState.mixLoad = sampleAt(p.x,p.y,r);
-    const bb = depositAt(p.x,p.y,r,paletteState.mixLoad,0.55);
+    const bb = depositAt(p.x,p.y,r,paletteState.mixLoad,typeCfg.mixRate);
     renderRect(bb[0]-1,bb[1]-1,bb[2]+2,bb[3]+2);
     updateCurrentColorDisplay(paletteState.mixLoad);
   } else {
-    const bb = depositAt(p.x,p.y,r,paletteState.loaded,1.0);
+    const bb = depositAt(p.x,p.y,r,paletteState.loaded,typeCfg.addRate);
     renderRect(bb[0]-1,bb[1]-1,bb[2]+2,bb[3]+2);
   }
 });
@@ -1371,6 +2052,15 @@ paletteCanvas.addEventListener('pointermove',(e)=>{
   const p = paletteCoords(e);
   const pressure = (e.pointerType==='pen' && e.pressure>0) ? e.pressure : 1;
   const r = currentRadius(pressure);
+
+  if(paletteState.tool==='water'){
+    const shape = findWaterShape(p.x,p.y);
+    paletteState.waterHold = shape;
+    if(shape) addWetBlob(shape);
+    return;
+  }
+
+  const typeCfg = PAINT_TYPES[paletteState.paintType];
   const dist = Math.hypot(p.x-paletteLast.x, p.y-paletteLast.y);
   const step = Math.max(1, r*0.35);
   const n = Math.max(1, Math.floor(dist/step));
@@ -1382,10 +2072,10 @@ paletteCanvas.addEventListener('pointermove',(e)=>{
     let bb;
     if(paletteState.tool==='mix'){
       const sampled = sampleAt(x,y,r);
-      for(let k=0;k<NP;k++) paletteState.mixLoad[k] += (sampled[k]-paletteState.mixLoad[k])*0.4;
-      bb = depositAt(x,y,r,paletteState.mixLoad,0.5);
+      for(let k=0;k<NP;k++) paletteState.mixLoad[k] += (sampled[k]-paletteState.mixLoad[k])*(typeCfg.mixRate*0.8);
+      bb = depositAt(x,y,r,paletteState.mixLoad,typeCfg.mixRate);
     } else {
-      bb = depositAt(x,y,r,paletteState.loaded,1.0);
+      bb = depositAt(x,y,r,paletteState.loaded,typeCfg.addRate);
     }
     minX=Math.min(minX,bb[0]); minY=Math.min(minY,bb[1]);
     maxX=Math.max(maxX,bb[2]); maxY=Math.max(maxY,bb[3]);
@@ -1395,7 +2085,7 @@ paletteCanvas.addEventListener('pointermove',(e)=>{
   if(paletteState.tool==='mix') updateCurrentColorDisplay(paletteState.mixLoad);
 });
 
-function endPaletteStroke(){ paletteDrawing=false; paletteLast=null; }
+function endPaletteStroke(){ paletteDrawing=false; paletteLast=null; paletteState.waterHold=null; }
 paletteCanvas.addEventListener('pointerup', endPaletteStroke);
 paletteCanvas.addEventListener('pointercancel', endPaletteStroke);
 paletteCanvas.addEventListener('pointerleave', endPaletteStroke);
@@ -1403,7 +2093,10 @@ paletteCanvas.addEventListener('pointerleave', endPaletteStroke);
 function initPalette(){
   initPaletteCanvas();
   buildPigmentShelf();
+  buildCustomShelf();
   selectPigment(paletteState.selectedPigment);
+  paintTypeSelect.value = paletteState.paintType;
+  document.querySelector('.water-tool').classList.toggle('show', paletteState.paintType==='watercolour');
   setPaletteTool('add');
 }
 
