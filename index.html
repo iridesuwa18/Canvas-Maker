@@ -1688,10 +1688,40 @@ function renderRect(x0,y0,x1,y1){
   paletteCtx.putImageData(img,x0,y0);
 }
 
-function updateCurrentColorDisplay(vec){
+// Reads the colour a pixel actually LOOKS like on screen: the paint's
+// reflectance composited (with its real opacity/dilution alpha, incl.
+// granulation noise) over the paper beneath it — not the idealised,
+// fully-opaque pigment reflectance. This is what the eyedropper should pick.
+function compositePixelHex(fx, fy){
+  fx = Math.max(0, Math.min(fieldW-1, Math.round(fx)));
+  fy = Math.max(0, Math.min(fieldH-1, Math.round(fy)));
+  const bg = paletteBgCtx.getImageData(fx,fy,1,1).data;
+  const base = (fy*fieldW+fx)*NP;
+  const vec = new Float32Array(NP);
+  for(let i=0;i<NP;i++) vec[i]=field[base+i];
   const res = mixVecToRgb(vec);
+  if(!res) return rgbToHex(bg[0]/255, bg[1]/255, bg[2]/255);
+  const typeCfg = PAINT_TYPES[paletteState.paintType];
+  let alpha = Math.min(1, res[3]/FULL_COVERAGE) * typeCfg.opacity;
+  if(typeCfg.granulate>0){
+    alpha *= 1 - typeCfg.granulate*0.35*hashNoise(fx,fy);
+  }
+  alpha = Math.max(0, Math.min(1, alpha));
+  const r = res[0]*alpha + (bg[0]/255)*(1-alpha);
+  const g = res[1]*alpha + (bg[1]/255)*(1-alpha);
+  const b = res[2]*alpha + (bg[2]/255)*(1-alpha);
+  return rgbToHex(r,g,b);
+}
+
+function updateCurrentColorDisplay(vec, hexOverride){
   const sw = document.getElementById('currentColorSwatch');
   const hx = document.getElementById('currentColorHex');
+  if(hexOverride){
+    sw.style.background = hexOverride;
+    hx.textContent = hexOverride.toUpperCase();
+    return;
+  }
+  const res = mixVecToRgb(vec);
   if(!res){
     sw.style.background = 'transparent';
     hx.textContent = '—';
@@ -2149,10 +2179,10 @@ paletteCanvas.addEventListener('pointerdown',(e)=>{
     if(vec.some(v=>v>0)){
       paletteState.loaded = vec;
       highlightShelf(-1);
-      updateCurrentColorDisplay(vec);
+      const hex = compositePixelHex(p.x,p.y);
+      updateCurrentColorDisplay(vec, hex);
       if(paletteState.copyOnPick){
-        const res = mixVecToRgb(vec);
-        if(res) copyHexToClipboard(rgbToHex(res[0],res[1],res[2]).toUpperCase());
+        copyHexToClipboard(hex.toUpperCase());
       }
     }
     return;
