@@ -899,6 +899,11 @@ function generateTexture(canvas, opts, onProgress, done){
   const nWeaveA = makePerlin(seed+303);
   const nWeaveB = makePerlin(seed+404);
   const nFine = makePerlin(seed+505);
+  // Slow, independent-per-channel noise fields for subtle hue drift — real
+  // paper isn't a flat tint, it has faint warm/cool patches and impurities.
+  const nColorR = makePerlin(seed+606);
+  const nColorG = makePerlin(seed+707);
+  const nColorB = makePerlin(seed+808);
 
   const grainAmt = grain/100;
   const crumpleAmt = crumple/100;
@@ -906,10 +911,12 @@ function generateTexture(canvas, opts, onProgress, done){
   const heights = new Float32Array(wpx*hpx);
 
   // frequency profile per paper type
-  let freqBase, octaves, gain, lac, weaveSpacing=null, directional=1;
+  // grainScale/speckleScale tame the fine sandy noise for smoother papers —
+  // hot-press should look almost grain-free, cold-press only lightly toothed.
+  let freqBase, octaves, gain, lac, weaveSpacing=null, directional=1, grainScale=1, speckleScale=1;
   switch(type){
-    case 'hotpress': freqBase=0.06; octaves=4; gain=0.55; lac=2.1; break;
-    case 'coldpress': freqBase=0.028; octaves=5; gain=0.62; lac=2.0; break;
+    case 'hotpress': freqBase=0.06; octaves=4; gain=0.55; lac=2.1; grainScale=0.32; speckleScale=0.18; break;
+    case 'coldpress': freqBase=0.028; octaves=5; gain=0.62; lac=2.0; grainScale=0.62; speckleScale=0.45; break;
     case 'kraft': freqBase=0.02; octaves=6; gain=0.68; lac=2.15; break;
     case 'sketch': freqBase=0.045; octaves=4; gain=0.5; lac=2.3; directional=1.8; break;
     case 'canvas': freqBase=0.05; octaves=3; gain=0.5; lac=2.0; weaveSpacing = Math.max(5, wpx/220); break;
@@ -933,7 +940,7 @@ function generateTexture(canvas, opts, onProgress, done){
         h = h*0.8 + fine*0.25;
       }
       const crumpleH = fbm(nCrumple, x*0.006, y*0.006, 3, 2.0, 0.6);
-      h = h*grainAmt*1.1 + crumpleH*crumpleAmt*1.6;
+      h = h*grainAmt*1.1*grainScale + crumpleH*crumpleAmt*1.6;
       heights[idx]=h;
     }
     if((y & 63)===0) onProgress && onProgress(0.15 + 0.45*(y/hpx));
@@ -961,12 +968,20 @@ function generateTexture(canvas, opts, onProgress, done){
       const ambient = 0.62;
       const bright = ambient + shade*0.55;
 
-      const speck = (hash2(x,y,seed) - 0.5) * 0.06 * grainAmt;
-      const fiber = (hash2((x*3)|0,(y*7)|0, seed+9) < 0.02*grainAmt) ? -0.05*grainAmt : 0;
+      const speck = (hash2(x,y,seed) - 0.5) * 0.06 * grainAmt * speckleScale;
+      const fiber = (hash2((x*3)|0,(y*7)|0, seed+9) < 0.02*grainAmt) ? -0.05*grainAmt*speckleScale : 0;
 
-      let r = tint[0]*bright + speck + fiber;
-      let g = tint[1]*bright + speck + fiber;
-      let b = tint[2]*bright + speck + fiber;
+      // Large, soft colour-drift blotches — independent per channel so the
+      // undertone wanders warm/cool across the sheet instead of the whole
+      // texture reading as one flat tint with grayscale grain on top.
+      const drift = 0.035;
+      const cR = fbm(nColorR, x*0.0035, y*0.0035, 2, 2.0, 0.5) * drift;
+      const cG = fbm(nColorG, x*0.0035+50, y*0.0035+50, 2, 2.0, 0.5) * drift;
+      const cB = fbm(nColorB, x*0.0035+90, y*0.0035+90, 2, 2.0, 0.5) * drift;
+
+      let r = tint[0]*bright + speck + fiber + cR;
+      let g = tint[1]*bright + speck + fiber + cG;
+      let b = tint[2]*bright + speck + fiber + cB;
 
       r = Math.max(0,Math.min(1,r));
       g = Math.max(0,Math.min(1,g));
