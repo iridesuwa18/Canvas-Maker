@@ -857,6 +857,82 @@ function hash2(x,y,seed){
   return ((h>>>0) % 100000) / 100000;
 }
 
+// Separable box blur for a single-channel Float32Array (heights, grain
+// masks, etc.) — same sliding-window trick as boxBlurRGB but without the
+// per-pixel RGB overhead.
+function boxBlur1(src, w, h, radius){
+  const winSize = radius*2+1;
+  const tmp = new Float32Array(w*h);
+  for(let y=0;y<h;y++){
+    const rowOff = y*w;
+    let s=0;
+    for(let k=-radius;k<=radius;k++) s += src[rowOff + Math.min(w-1,Math.max(0,k))];
+    for(let x=0;x<w;x++){
+      tmp[rowOff+x] = s/winSize;
+      const xOutC = Math.min(w-1,Math.max(0,x-radius));
+      const xInC  = Math.min(w-1,Math.max(0,x+radius+1));
+      s += src[rowOff+xInC] - src[rowOff+xOutC];
+    }
+  }
+  const out = new Float32Array(w*h);
+  for(let x=0;x<w;x++){
+    let s=0;
+    for(let k=-radius;k<=radius;k++) s += tmp[Math.min(h-1,Math.max(0,k))*w+x];
+    for(let y=0;y<h;y++){
+      out[y*w+x] = s/winSize;
+      const yOutC = Math.min(h-1,Math.max(0,y-radius));
+      const yInC  = Math.min(h-1,Math.max(0,y+radius+1));
+      s += tmp[yInC*w+x] - tmp[yOutC*w+x];
+    }
+  }
+  return out;
+}
+
+// Separable box blur over an RGBA Uint8ClampedArray's RGB channels, using a
+// sliding-window sum so cost stays O(pixels) regardless of radius. Two
+// passes (horizontal then vertical) approximate a soft Gaussian, which is
+// enough to take the edge off per-pixel noise without needing a slow
+// full-kernel convolution on a multi-megapixel canvas.
+function boxBlurRGB(data, w, h, radius){
+  const winSize = radius*2+1;
+  const tmp = new Float32Array(w*h*3);
+  for(let y=0;y<h;y++){
+    const rowOff = y*w;
+    let sr=0,sg=0,sb=0;
+    for(let k=-radius;k<=radius;k++){
+      const xx = Math.min(w-1,Math.max(0,k));
+      const o = (rowOff+xx)*4;
+      sr+=data[o]; sg+=data[o+1]; sb+=data[o+2];
+    }
+    for(let x=0;x<w;x++){
+      const t = (rowOff+x)*3;
+      tmp[t]=sr/winSize; tmp[t+1]=sg/winSize; tmp[t+2]=sb/winSize;
+      const xOutC = Math.min(w-1,Math.max(0,x-radius));
+      const xInC  = Math.min(w-1,Math.max(0,x+radius+1));
+      const oOut=(rowOff+xOutC)*4, oIn=(rowOff+xInC)*4;
+      sr += data[oIn]-data[oOut]; sg += data[oIn+1]-data[oOut+1]; sb += data[oIn+2]-data[oOut+2];
+    }
+  }
+  const out = new Float32Array(w*h*3);
+  for(let x=0;x<w;x++){
+    let sr=0,sg=0,sb=0;
+    for(let k=-radius;k<=radius;k++){
+      const yy = Math.min(h-1,Math.max(0,k));
+      const t = (yy*w+x)*3;
+      sr+=tmp[t]; sg+=tmp[t+1]; sb+=tmp[t+2];
+    }
+    for(let y=0;y<h;y++){
+      const o = (y*w+x)*3;
+      out[o]=sr/winSize; out[o+1]=sg/winSize; out[o+2]=sb/winSize;
+      const yOutC = Math.min(h-1,Math.max(0,y-radius));
+      const yInC  = Math.min(h-1,Math.max(0,y+radius+1));
+      const tOut=(yOutC*w+x)*3, tIn=(yInC*w+x)*3;
+      sr += tmp[tIn]-tmp[tOut]; sg += tmp[tIn+1]-tmp[tOut+1]; sb += tmp[tIn+2]-tmp[tOut+2];
+    }
+  }
+  return out;
+}
+
 /* ============================================================
    PAPER TEXTURE GENERATOR
    ============================================================ */
@@ -946,6 +1022,14 @@ function generateTexture(canvas, opts, onProgress, done){
     if((y & 63)===0) onProgress && onProgress(0.15 + 0.45*(y/hpx));
   }
 
+  // Smooth the height field before it's turned into shading. The bump-map
+  // below reads the raw pixel-to-pixel slope, so any sharp step in the
+  // height data — especially the over/under thread edges in the weave
+  // pattern — comes out as a hard, faceted "bevel" rather than a soft
+  // ridge. A light blur rounds those steps off before lighting sees them.
+  const heightBlurRadius = weaveSpacing ? Math.max(1, Math.round(weaveSpacing*0.12)) : 1;
+  const smoothHeights = boxBlur1(heights, wpx, hpx, heightBlurRadius);
+
   // ---- Pass 2: lighting + speckle + composite ----
   const lightRad = (lightAngleDeg*Math.PI)/180;
   const Lx = Math.cos(lightRad), Ly = Math.sin(lightRad), Lz = 0.85;
@@ -957,31 +1041,42 @@ function generateTexture(canvas, opts, onProgress, done){
     const yN = Math.min(hpx-1,y+1), yP = Math.max(0,y-1);
     for(let x=0;x<wpx;x++, idx++){
       const xN = Math.min(wpx-1,x+1), xP = Math.max(0,x-1);
-      const hL = heights[y*wpx+xP], hR = heights[y*wpx+xN];
-      const hU = heights[yP*wpx+x], hD = heights[yN*wpx+x];
-      const dx = (hR-hL)*6.0, dy=(hD-hU)*6.0;
+      const hL = smoothHeights[y*wpx+xP], hR = smoothHeights[y*wpx+xN];
+      const hU = smoothHeights[yP*wpx+x], hD = smoothHeights[yN*wpx+x];
+      // Lower slope multiplier + a gentler highlight/shadow weight (with
+      // ambient raised to match) — the old values exaggerated even smooth
+      // Perlin bumps into crisp, bevel-like edges.
+      const dx = (hR-hL)*4.0, dy=(hD-hU)*4.0;
       // normal = normalize(-dx,-dy,1)
       const nx=-dx, ny=-dy, nz=1;
       const nlen = Math.sqrt(nx*nx+ny*ny+nz*nz);
       const dot = (nx*lx+ny*ly+nz*lz)/nlen;
       const shade = Math.max(0,dot);
-      const ambient = 0.62;
-      const bright = ambient + shade*0.55;
+      const ambient = 0.7;
+      const bright = ambient + shade*0.42;
 
       const speck = (hash2(x,y,seed) - 0.5) * 0.06 * grainAmt * speckleScale;
       const fiber = (hash2((x*3)|0,(y*7)|0, seed+9) < 0.02*grainAmt) ? -0.05*grainAmt*speckleScale : 0;
 
-      // Large, soft colour-drift blotches — independent per channel so the
-      // undertone wanders warm/cool across the sheet instead of the whole
-      // texture reading as one flat tint with grayscale grain on top.
-      const drift = 0.035;
-      const cR = fbm(nColorR, x*0.0035, y*0.0035, 2, 2.0, 0.5) * drift;
-      const cG = fbm(nColorG, x*0.0035+50, y*0.0035+50, 2, 2.0, 0.5) * drift;
-      const cB = fbm(nColorB, x*0.0035+90, y*0.0035+90, 2, 2.0, 0.5) * drift;
+      const r0 = tint[0]*bright + speck + fiber;
+      const g0 = tint[1]*bright + speck + fiber;
+      const b0 = tint[2]*bright + speck + fiber;
 
-      let r = tint[0]*bright + speck + fiber + cR;
-      let g = tint[1]*bright + speck + fiber + cG;
-      let b = tint[2]*bright + speck + fiber + cB;
+      // Large, soft colour-drift blotches. Shifting R/G/B independently (or
+      // even along a fixed warm/cool axis) still reads as a distinct tinted
+      // patch — a cool patch on warm paper looks like a blue stain. Instead,
+      // pull each blotch toward or away from its own grey (saturation) and
+      // nudge its brightness (value), both very gently. That can only ever
+      // land somewhere between "greyer" and "richer" versions of the paper's
+      // own colour, so it never introduces a colour that isn't already there.
+      const satAmt = 0.16, valAmt = 0.02;
+      const satN = fbm(nColorR, x*0.0035, y*0.0035, 2, 2.0, 0.5) * satAmt;
+      const valN = fbm(nColorG, x*0.003+50, y*0.003+50, 2, 2.0, 0.5) * valAmt;
+      const lum = 0.299*r0 + 0.587*g0 + 0.114*b0;
+
+      let r = lum + (r0-lum)*(1+satN) + valN;
+      let g = lum + (g0-lum)*(1+satN) + valN;
+      let b = lum + (b0-lum)*(1+satN) + valN;
 
       r = Math.max(0,Math.min(1,r));
       g = Math.max(0,Math.min(1,g));
@@ -994,6 +1089,22 @@ function generateTexture(canvas, opts, onProgress, done){
       data[o+3] = 255;
     }
     if((y & 63)===0) onProgress && onProgress(0.6 + 0.4*(y/hpx));
+  }
+
+  // ---- Pass 3: soften ----
+  // The per-pixel hash noise (speck/fiber) is pure static — every pixel is
+  // independent of its neighbours, which is what reads as sandpaper rather
+  // than paper: real fibre grain has some width and blends into itself.
+  // A light box blur, blended back in only partway, rounds off that raw
+  // pixel noise without flattening the broader weave/crumple shading.
+  onProgress && onProgress(0.97);
+  const blurRadius = Math.max(1, Math.min(4, Math.round(wpx/700)));
+  const blurred = boxBlurRGB(data, wpx, hpx, blurRadius);
+  const softenMix = 0.6; // how much of the blur to blend back in (0=off, 1=fully blurred)
+  for(let i=0, o=0, j=0; i<wpx*hpx; i++, o+=4, j+=3){
+    data[o]   = data[o]  *(1-softenMix) + blurred[j]  *softenMix;
+    data[o+1] = data[o+1]*(1-softenMix) + blurred[j+1]*softenMix;
+    data[o+2] = data[o+2]*(1-softenMix) + blurred[j+2]*softenMix;
   }
 
   ctx.putImageData(img,0,0);
@@ -1137,11 +1248,23 @@ function fitToScreen(){
   applyTransform();
 }
 
+// Mobile browsers (Safari in particular) silently drop a composited layer
+// once its on-screen size passes a GPU texture limit (commonly 8192px,
+// sometimes less on older devices) — the element just stops rendering, with
+// no error. A large sheet zoomed to 800% can blow past that easily, which is
+// why the canvas could "disappear" at full zoom. Cap how far we let anyone
+// zoom in so the rendered size of the actual canvas never crosses that limit.
+const MAX_RENDERED_PX = 4096;
+function maxSafeScale(){
+  if(!textureCanvas.width || !textureCanvas.height) return 8;
+  return Math.max(1, Math.min(8, MAX_RENDERED_PX/textureCanvas.width, MAX_RENDERED_PX/textureCanvas.height));
+}
+
 function zoomBy(factor, cx, cy){
   const rect = viewportWrap.getBoundingClientRect();
   const px = cx===undefined ? rect.width/2 : cx;
   const py = cy===undefined ? rect.height/2 : cy;
-  const newScale = Math.max(0.05, Math.min(8, state.scale*factor));
+  const newScale = Math.max(0.05, Math.min(maxSafeScale(), state.scale*factor));
   const ratio = newScale/state.scale;
   state.offsetX = px - (px-state.offsetX)*ratio;
   state.offsetY = py - (py-state.offsetY)*ratio;
