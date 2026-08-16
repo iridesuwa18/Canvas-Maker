@@ -120,10 +120,6 @@
     grid-row:2; grid-column:1;
     min-height:0;
   }
-  @media(max-width:880px){
-    #main{ grid-template-columns:1fr; }
-    #viewport-wrap{ grid-column:1; }
-  }
   .force-hidden{ display:none !important; }
 
   /* ---------- Side panel ---------- */
@@ -282,6 +278,10 @@
       linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
     background-size:24px 24px;
     pointer-events:none;
+  }
+  @media(max-width:880px){
+    #main{ grid-template-columns:1fr; }
+    #viewport-wrap{ grid-column:1; grid-row:1; }
   }
   #stage{
     position:absolute;
@@ -770,6 +770,7 @@
       </div>
 
       <button class="btn danger wash-btn" id="washBtn">💧 Wash palette</button>
+      <button class="btn wash-btn" id="clearMixBtn" title="Clear only the big centre mixing area">🧽 Clear mix area</button>
 
       <div class="current-color">
         <div class="swatch-big" id="currentColorSwatch"></div>
@@ -1465,7 +1466,7 @@ document.getElementById('helpBtn').addEventListener('click',()=>{
   if(activeTab==='canvas'){
     alert('CanvasMaker generates paper texture purely from math — layered noise, a woven-thread pattern, and simulated lighting off a height map. No stock images.\n\nDrag with one finger to pan. Scroll / pinch to zoom. Regenerating the paper replaces the current sheet.');
   } else {
-    alert('The Palette mixes paint the way real pigments do (a Kubelka-Munk style subtractive model), not a simple digital blend.\n\nTap a tube to load it, then use Add to lay fresh paint into one of the wells — it does not blend with paint already there, just like squeezing paint from a tube. Switch to Mix to drag a brush through the paint: it picks up colour from whatever it passes over and smears it around. Use the Eyedropper to pick up any colour already mixed on the palette — toggle "Copy hex" to also copy the picked colour to your clipboard.\n\nChoose Acrylic, Gouache, Oil or Watercolour from the Paint menu: each mixes differently — oil stays streaky and marbled, watercolour is translucent and granulated. In Watercolour mode a Water tool appears — press and hold anywhere in a well and everything in it swirls toward the centre, blending together and thinning out the longer you hold, like real water stirred into pigment. Wash palette clears everything.');
+    alert('The Palette mixes paint the way real pigments do (a Kubelka-Munk style subtractive model), not a simple digital blend.\n\nTap a tube to load it, then use Add to lay fresh paint into one of the wells — it does not blend with paint already there, just like squeezing paint from a tube. Switch to Mix to drag a brush through the paint: it picks up colour from whatever it passes over and smears it around. Use the Eyedropper to pick up any colour already mixed on the palette — toggle "Copy hex" to also copy the picked colour to your clipboard.\n\nChoose Acrylic, Gouache, Oil or Watercolour from the Paint menu: each mixes differently — oil stays streaky and marbled, watercolour is translucent and granulated. In Watercolour mode a Water tool appears — press and hold anywhere in a well and everything in it swirls toward the centre, blending together and thinning out the longer you hold, like real water stirred into pigment. Wash palette clears everything; Clear mix area only clears the big centre mixing hole, leaving the loaded wells untouched.');
   }
 });
 
@@ -2018,6 +2019,36 @@ document.getElementById('washBtn').addEventListener('click', ()=>{
   paletteCtx.clearRect(0,0,fieldW,fieldH);
   paletteWetCtx.clearRect(0,0,fieldW,fieldH);
   updateCurrentColorDisplay(paletteState.loaded);
+});
+
+// Zeroes out the pigment field within a single well/area (leaving every
+// other well untouched) and redraws just that patch, rather than the whole
+// board like Wash palette does.
+function clearWell(shape){
+  if(!field || !shape) return;
+  const {cx,cy,r} = shape;
+  const x0=Math.max(0,Math.floor(cx-r)), x1=Math.min(fieldW,Math.ceil(cx+r));
+  const y0=Math.max(0,Math.floor(cy-r)), y1=Math.min(fieldH,Math.ceil(cy+r));
+  const r2 = r*r;
+  for(let y=y0;y<y1;y++){
+    for(let x=x0;x<x1;x++){
+      const dx=x-cx, dy=y-cy;
+      if(dx*dx+dy*dy>r2) continue;
+      const idx=(y*fieldW+x)*NP;
+      for(let i=0;i<NP;i++) field[idx+i]=0;
+    }
+  }
+  // stop any swirl currently active in this well and refresh its overlay
+  paletteState.wetBlobs = paletteState.wetBlobs.filter(b=>b.shape!==shape);
+  if(paletteState.waterHold && paletteState.waterHold.shape===shape) paletteState.waterHold=null;
+  if(!paletteState.wetBlobs.length) stopWetLoop();
+  renderRect(x0-1,y0-1,x1+1,y1+1);
+  renderWetOverlay();
+}
+
+document.getElementById('clearMixBtn').addEventListener('click', ()=>{
+  if(!wellGeo) return;
+  clearWell(wellGeo.mix);
 });
 
 const paintTypeSelect = document.getElementById('paintTypeSelect');
