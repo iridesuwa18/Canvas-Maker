@@ -116,16 +116,19 @@
   #main{
     display:grid;
     grid-template-columns:300px 1fr;
+    grid-template-rows:1fr;
     grid-row:2; grid-column:1;
     min-height:0;
   }
   @media(max-width:880px){
     #main{ grid-template-columns:1fr; }
+    #viewport-wrap{ grid-column:1; }
   }
   .force-hidden{ display:none !important; }
 
   /* ---------- Side panel ---------- */
   #panel{
+    grid-column:1; grid-row:1;
     background:var(--panel);
     border-right:1px solid var(--line);
     overflow-y:auto;
@@ -264,6 +267,7 @@
 
   /* ---------- Viewport ---------- */
   #viewport-wrap{
+    grid-column:2; grid-row:1;
     position:relative;
     overflow:hidden;
     background:
@@ -345,6 +349,19 @@
   #panelToggle{
     display:none;
   }
+  /* #panelScrim must always be taken out of #main's grid flow — it's meant
+     purely as a mobile backdrop overlay. Previously this rule only applied
+     inside the mobile media query, so on wider screens (desktop/iPad) it sat
+     as a plain, unpositioned first child of the #main grid and consumed the
+     grid's first cell, bumping the settings panel into the second column
+     and pushing the canvas viewport into a new, contentless row that
+     collapsed to zero height — hiding the canvas entirely. */
+  #panelScrim{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.4);
+    z-index:25;
+  }
   @media(max-width:880px){
     #panelToggle{
       display:flex;
@@ -362,12 +379,6 @@
       box-shadow:0 8px 24px rgba(0,0,0,.4);
       align-items:center;
       gap:8px;
-    }
-    #panelScrim{
-      display:none;
-      position:fixed; inset:0;
-      background:rgba(0,0,0,.4);
-      z-index:25;
     }
     #panelScrim.show{ display:block; }
   }
