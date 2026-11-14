@@ -51,6 +51,7 @@
     align-items:center;
     justify-content:space-between;
     padding:10px 16px;
+    padding-top:calc(10px + env(safe-area-inset-top, 0px));
     background:var(--panel);
     border-bottom:1px solid var(--line);
     z-index:20;
@@ -401,29 +402,22 @@
     min-height:0;
     min-width:0;
     overflow-y:auto;   /* safety net: if content is ever taller than the row, scroll instead of clipping */
+    padding-bottom:env(safe-area-inset-bottom, 0px);
   }
   #paletteMain.active{ display:flex; }
 
-  .palette-toolbar{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-    padding:10px 16px;
-    background:var(--panel);
-    border-bottom:1px solid var(--line);
-    min-width:0;
-  }
-  .palette-tools{ display:flex; gap:6px; flex:none; }
+  .palette-tools{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; flex:1; min-width:0; }
+  .palette-tools:has(.water-tool.show){ grid-template-columns:repeat(5,1fr); }
   .palette-tools button{
     background:var(--panel-2);
     border:1px solid var(--line);
     color:var(--ink-dim);
-    width:40px;height:40px;
+    height:44px; min-width:0;
     border-radius:9px;
-    display:flex;align-items:center;justify-content:center;
+    display:flex; align-items:center; justify-content:center; gap:6px;
     cursor:pointer;
-    flex:none;
+    font-family:inherit; font-size:12px; font-weight:600;
+    padding:0 6px;
   }
   .palette-tools button.active{
     background:linear-gradient(135deg,var(--umber-light),var(--umber));
@@ -435,85 +429,69 @@
     color:#0a222c;
   }
   .palette-tools button:active{ transform:translateY(1px); }
-  .palette-tools svg{ width:18px;height:18px; }
+  .palette-tools svg{ width:17px;height:17px; flex:none; }
   .palette-tools button.water-tool{ display:none; }
   .palette-tools button.water-tool.show{ display:flex; }
 
-  .copy-toggle{
-    display:flex; align-items:center; gap:6px;
-    background:var(--panel-2);
-    border:1px solid var(--line);
-    color:var(--ink-dim);
-    padding:0 10px;
-    height:40px;
-    border-radius:9px;
-    cursor:pointer;
-    font-size:11px;
-    font-weight:600;
-    flex:none;
-    white-space:nowrap;
-    font-family:inherit;
+  .prow{
+    display:flex; align-items:center; gap:8px;
+    padding:6px 14px;
+    background:var(--panel);
+    min-width:0; flex:none;
   }
-  .copy-toggle.on{
-    color:#20140a;
-    background:linear-gradient(135deg,var(--umber-light),var(--umber));
-    border-color:transparent;
+  .prow.first{ padding-top:10px; }
+  .prow.last-tool{ padding-bottom:10px; border-bottom:1px solid var(--line); }
+  .size-pill{
+    flex:none; display:flex; gap:5px;
+    background:var(--panel-2); border:1px solid var(--line);
+    border-radius:9px; height:44px; padding:0 12px; align-items:center;
+    font-size:11px; color:var(--ink-dim);
   }
-  .copy-toggle svg{ width:14px;height:14px; flex:none; }
+  .size-pill .val{ color:var(--ink); font-weight:700; font-size:13px; font-variant-numeric:tabular-nums; min-width:36px; text-align:right; }
+  #paletteBrushSize{ height:6px; }
+  #paletteBrushSize::-webkit-slider-thumb{ width:24px; height:24px; margin-top:-9px; }
 
-  .paint-type-ctl{ display:flex; align-items:center; gap:8px; flex:none; }
+  .paint-type-ctl{ display:flex; align-items:center; gap:6px; flex:1; min-width:0; }
   .paint-type-ctl .lbl{ font-size:11px; color:var(--ink-dim); white-space:nowrap; }
   #paintTypeSelect{
-    width:auto;
-    min-width:112px;
-    background:var(--panel-2);
-    border:1px solid var(--line);
-    color:var(--ink);
-    padding:8px 10px;
-    border-radius:8px;
-    font-size:12.5px;
-    font-weight:600;
-    font-family:inherit;
+    width:100%; min-width:0; flex:1;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    padding:0 8px; height:40px; border-radius:8px;
+    font-size:12.5px; font-weight:600; font-family:inherit;
   }
+  .prow .sbtn{ height:40px; padding:0 11px; font-size:12px; white-space:nowrap; flex:none; }
 
-  .brush-size-ctl{
-    display:flex; align-items:center; gap:10px;
-    flex:1; min-width:130px; max-width:220px;
-  }
-  .brush-size-ctl .lbl{ font-size:11px; color:var(--ink-dim); white-space:nowrap; }
-  .brush-size-ctl .val{ font-size:11px; color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; width:34px; text-align:right; }
-
-  .current-color{ display:flex; align-items:center; gap:9px; margin-left:auto; flex:none; }
+  .colour-row{ border-top:1px solid var(--line); }
+  .current-color{ display:flex; align-items:center; gap:9px; flex:1; min-width:0; }
   .current-color .swatch-big{
     width:34px;height:34px;border-radius:50%;
     border:2px solid var(--line);
     box-shadow:0 2px 6px rgba(0,0,0,.4) inset;
     flex:none;
   }
-  .current-color .hexval{
-    font-size:11px; color:var(--ink-dim);
-    font-variant-numeric:tabular-nums;
-    min-width:58px;
+  .current-color .hexval{ font-size:13px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .drawer-toggle{
+    height:40px; padding:0 12px; flex:none;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:8px; font-size:12px; font-weight:600; font-family:inherit;
+    display:flex; align-items:center; gap:6px; cursor:pointer;
   }
+  .drawer-toggle svg{ width:14px; height:14px; transition:transform .2s ease; }
+  .drawer-toggle[aria-expanded="true"] svg{ transform:rotate(180deg); }
 
-  .pigment-shelf{
-    display:flex; gap:12px;
-    padding:12px 16px;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
+  #colourDrawer{
     background:var(--panel);
-    border-bottom:1px solid var(--line);
-    min-width:0;
+    padding:4px 14px 8px;
     flex:none;
+    max-height:40dvh; overflow-y:auto; -webkit-overflow-scrolling:touch;
   }
+  .colour-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px 4px; }
   .pigment-tube{
-    flex:none;
-    display:flex; flex-direction:column; align-items:center; gap:5px;
-    cursor:pointer;
-    width:48px;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    cursor:pointer; min-width:0; position:relative;
   }
   .pigment-tube .cap{
-    width:38px;height:38px;border-radius:50%;
+    width:36px;height:36px;border-radius:50%;
     border:2px solid rgba(255,255,255,.08);
     box-shadow:0 2px 5px rgba(0,0,0,.45), inset 0 2px 3px rgba(255,255,255,.15);
   }
@@ -522,46 +500,35 @@
     box-shadow:0 0 0 2px var(--umber-light), 0 2px 5px rgba(0,0,0,.45);
   }
   .pigment-tube .lbl{
-    font-size:9px; color:var(--ink-dim); text-align:center; line-height:1.2;
+    font-size:9px; color:var(--ink-dim); text-align:center; line-height:1.15;
+    max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
+  /* collapsed = just the first row of 6; expanded = everything */
+  #colourDrawer:not(.open) #pigmentShelf .pigment-tube:not(.core){ display:none; }
+  #colourDrawer:not(.open) #customSection{ display:none; }
+  #customSection{ margin-top:10px; padding-top:8px; border-top:1px solid var(--line); }
+  .drawer-title{ font-size:11px; font-weight:600; color:var(--ink-dim); margin-bottom:8px; text-transform:uppercase; letter-spacing:.04em; }
+  .custom-swatch .del{
+    position:absolute; top:-5px; right:2px;
+    width:17px;height:17px; border-radius:50%;
+    background:#2a2723; color:var(--ink-dim); font-size:11px; line-height:15px; text-align:center;
+    cursor:pointer; border:1px solid var(--line);
+  }
+  .custom-swatch .del:hover{ color:#d15353; border-color:#d15353; }
+  .custom-empty-hint{ grid-column:1 / -1; font-size:11px; color:var(--ink-dim); font-style:italic; }
 
-  .custom-shelf{
-    display:flex; align-items:center; gap:14px;
-    padding:10px 16px;
-    background:var(--panel-2);
-    border-bottom:1px solid var(--line);
-    flex:none; flex-wrap:wrap;
-  }
-  .custom-add{ display:flex; align-items:center; gap:6px; flex:none; }
-  .custom-add .lbl{ font-size:11px; color:var(--ink-dim); white-space:nowrap; }
+  .insert-row{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding-top:8px; padding-bottom:8px; }
+  .insert-row .lbl{ font-size:11px; color:var(--ink-dim); white-space:nowrap; }
   #customHexInput{
-    width:92px; font-size:12px; padding:6px 8px;
-    border-radius:6px; border:1px solid var(--line);
+    flex:1; min-width:0; width:auto; height:38px; font-size:13px; padding:0 10px;
+    border-radius:8px; border:1px solid var(--line);
     background:#00000030; color:var(--ink);
     font-variant-numeric:tabular-nums;
   }
   #customHexInput.invalid{ border-color:#d15353; }
-  #customHexAdd{
-    font-size:11px; padding:6px 12px; border-radius:6px;
-    border:1px solid var(--line); background:linear-gradient(135deg,var(--umber-light),var(--umber));
-    color:#fff; cursor:pointer; flex:none;
-  }
-  #customHexAdd:active{ transform:translateY(1px); }
-  .custom-swatches{
-    display:flex; gap:12px; overflow-x:auto; -webkit-overflow-scrolling:touch;
-    flex:1; min-width:0;
-  }
-  .custom-swatch{ position:relative; }
-  .custom-swatch .del{
-    position:absolute; top:-5px; right:1px;
-    width:15px;height:15px; border-radius:50%;
-    background:#2a2723; color:var(--ink-dim); font-size:10px; line-height:14px; text-align:center;
-    cursor:pointer; border:1px solid var(--line);
-  }
-  .custom-swatch .del:hover{ color:#d15353; border-color:#d15353; }
-  .custom-empty-hint{ font-size:11px; color:var(--ink-dim); font-style:italic; }
+  #customHexAdd{ background:linear-gradient(135deg,var(--umber-light),var(--umber)); color:#20140a; border-color:transparent; }
 
-  #paletteBoardWrap{
+#paletteBoardWrap{
     flex:1; min-height:0; min-width:0;
     position:relative;
     display:flex; align-items:center; justify-content:center;
@@ -624,18 +591,13 @@
 
   @media(max-width:640px){
     #paletteHint{ display:none; }
-    .current-color{ margin-left:0; }
-    .palette-toolbar{ gap:8px; padding:8px 12px; }
-    .brush-size-ctl{ order:5; flex-basis:100%; max-width:none; }
-    .pigment-shelf{ padding:8px 12px; gap:8px; }
-    .custom-shelf{ padding:6px 12px; gap:8px; }
+    .prow{ padding-left:10px; padding-right:10px; }
+    #colourDrawer{ padding-left:10px; padding-right:10px; }
     #paletteBoardWrap{ padding:8px; }
   }
   @media(max-height:640px){
-    .pigment-shelf{ padding:6px 12px; gap:8px; }
     .pigment-tube .cap{ width:30px; height:30px; }
     .pigment-tube .lbl{ display:none; }
-    .custom-shelf{ padding:5px 12px; gap:8px; }
     #paletteBoardWrap{ padding:6px; }
   }
 </style>
@@ -739,29 +701,34 @@
   <button id="panelToggle">🎛 Paper &amp; Canvas</button>
 
   <div id="paletteMain">
-    <div class="palette-toolbar">
+    <div class="prow first">
       <div class="palette-tools">
-        <button data-ptool="add" class="active" title="Add paint — deposits paint, does not mix colours">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s6.5 7.2 6.5 11.2A6.5 6.5 0 0112 20.7a6.5 6.5 0 01-6.5-6.5C5.5 10.2 12 3 12 3z"/></svg>
+        <button data-ptool="add" class="active" title="Paint — deposits paint, does not mix colours">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s6.5 7.2 6.5 11.2A6.5 6.5 0 0112 20.7a6.5 6.5 0 01-6.5-6.5C5.5 10.2 12 3 12 3z"/></svg><span>Paint</span>
         </button>
         <button data-ptool="mix" title="Mix — blends whatever paint is already there">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4a8 8 0 018 8m-8-8a8 8 0 00-8 8m8-8v3.2M20 12a8 8 0 01-8 8m8-8h-3.2M4 12a8 8 0 008 8m-8-8h3.2m4.8 4.8V20"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4a8 8 0 018 8m-8-8a8 8 0 00-8 8m8-8v3.2M20 12a8 8 0 01-8 8m8-8h-3.2M4 12a8 8 0 008 8m-8-8h3.2m4.8 4.8V20"/></svg><span>Mix</span>
         </button>
-        <button data-ptool="eye" title="Eyedropper — pick a colour from the palette">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 2.5l4 4-3 3-4-4 3-3z"/><path d="M15.5 5.5L5 16l-1.5 4.5L8 19 18.5 8.5"/></svg>
+        <button data-ptool="eye" title="Picker — pick a colour from the palette">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 2.5l4 4-3 3-4-4 3-3z"/><path d="M15.5 5.5L5 16l-1.5 4.5L8 19 18.5 8.5"/></svg><span>Picker</span>
+        </button>
+        <button data-ptool="cloth" title="Cloth — wipe paint off the palette">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 9l9-5 7 4-1 9-9 3-6-4z"/><path d="M8 11l7 4M11 8l5 3"/></svg><span>Cloth</span>
         </button>
         <button data-ptool="water" class="water-tool" title="Water — press and hold in a well to swirl its colours toward the centre and thin them out">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.7s6 7 6 11.3a6 6 0 11-12 0c0-4.3 6-11.3 6-11.3z"/><path d="M9.5 14.2a2.5 2.5 0 002.5 2.5"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.7s6 7 6 11.3a6 6 0 11-12 0c0-4.3 6-11.3 6-11.3z"/><path d="M9.5 14.2a2.5 2.5 0 002.5 2.5"/></svg><span>Water</span>
         </button>
       </div>
+      <div class="size-pill"><span id="paletteSizeLbl">Brush</span><span class="val" id="paletteSizeVal">46px</span></div>
+    </div>
 
-      <button class="copy-toggle on" id="copyHexToggle" title="Copy the hex code to your clipboard whenever the eyedropper picks a colour">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M8 4H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2"/></svg>
-        <span id="copyHexLabel">Copy hex: On</span>
-      </button>
+    <div class="prow">
+      <input type="range" id="paletteBrushSize" min="8" max="120" value="46">
+    </div>
 
+    <div class="prow last-tool">
       <div class="paint-type-ctl">
-        <span class="lbl">Paint</span>
+        <span class="lbl">Paint type</span>
         <select id="paintTypeSelect">
           <option value="acrylic">Acrylic</option>
           <option value="gouache">Gouache</option>
@@ -769,31 +736,35 @@
           <option value="watercolour">Watercolour</option>
         </select>
       </div>
+      <button class="btn danger sbtn" id="washBtn">💧 Wash palette</button>
+      <button class="btn sbtn" id="clearMixBtn" title="Clear only the big centre mixing area">🧽 Clear mix</button>
+    </div>
 
-      <div class="brush-size-ctl">
-        <span class="lbl" id="paletteSizeLbl">Brush</span>
-        <input type="range" id="paletteBrushSize" min="8" max="120" value="46">
-        <span class="val" id="paletteSizeVal">46px</span>
-      </div>
-
-      <button class="btn danger wash-btn" id="washBtn">💧 Wash palette</button>
-      <button class="btn wash-btn" id="clearMixBtn" title="Clear only the big centre mixing area">🧽 Clear mix area</button>
-
+    <div class="prow colour-row">
       <div class="current-color">
         <div class="swatch-big" id="currentColorSwatch"></div>
         <span class="hexval" id="currentColorHex">—</span>
       </div>
+      <button class="btn sbtn" id="copyHexBtn" title="Copy the current colour's hex code">Copy hex</button>
+      <button class="drawer-toggle" id="drawerToggle" aria-expanded="false" aria-controls="colourDrawer" title="Show more colours">
+        <span>More</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
     </div>
 
-    <div class="pigment-shelf" id="pigmentShelf"></div>
-
-    <div class="custom-shelf" id="customShelf">
-      <div class="custom-add">
-        <span class="lbl">Insert colour</span>
-        <input type="text" id="customHexInput" placeholder="#RRGGBB" maxlength="7" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <button id="customHexAdd">+ Add</button>
+    <div id="colourDrawer">
+      <div class="colour-grid" id="pigmentShelf"></div>
+      <div id="customSection">
+        <div class="drawer-title">Custom colours</div>
+        <div class="colour-grid" id="customSwatches"></div>
       </div>
-      <div class="custom-swatches" id="customSwatches"></div>
+    </div>
+
+    <div class="prow insert-row">
+      <span class="lbl">Insert colour</span>
+      <input type="text" id="customHexInput" placeholder="#RRGGBB" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn sbtn" id="pasteHexBtn" title="Paste a hex code from your clipboard">📋 Paste</button>
+      <button class="btn sbtn" id="customHexAdd">+ Add</button>
     </div>
 
     <div id="paletteBoardWrap">
@@ -1504,23 +1475,35 @@ window.addEventListener('orientationchange', ()=>{
    paint.
    ============================================================ */
 const PIGMENTS = [
-  { name:'Titanium White',   hex:'#F6F2E7', strength:3.60 },
-  { name:'Ivory Black',      hex:'#1B1712', strength:1.30 },
-  { name:'Cadmium Yellow',   hex:'#FFD400', strength:0.60 },
-  { name:'Lemon Yellow',     hex:'#F3E64E', strength:0.42 },
-  { name:'Cadmium Orange',   hex:'#FF7A00', strength:0.65 },
-  { name:'Cadmium Red',      hex:'#E12A1E', strength:0.75 },
-  { name:'Quin. Magenta',    hex:'#93154B', strength:1.00 },
-  { name:'Ultramarine Blue', hex:'#1C2B6B', strength:0.80 },
-  { name:'Cobalt Blue',      hex:'#1C4FA0', strength:0.70 },
-  { name:'Phthalo Blue',     hex:'#0B3B60', strength:1.60 },
-  { name:'Phthalo Green',    hex:'#00473D', strength:1.60 },
-  { name:'Yellow Ochre',     hex:'#C9971D', strength:0.50 },
+  // Ordered as a rainbow (red -> purple), then earths & neutrals.
+  // `core` marks the six shown when the colour drawer is collapsed.
+  { name:'Alizarin Crimson', hex:'#7A1427', strength:0.90 },
+  { name:'Cadmium Red',      hex:'#E12A1E', strength:0.75, core:true },
   { name:'Burnt Sienna',     hex:'#93401F', strength:0.55 },
+  { name:'Cadmium Orange',   hex:'#FF7A00', strength:0.65 },
+  { name:'Yellow Ochre',     hex:'#C9971D', strength:0.50 },
+  { name:'Cadmium Yellow',   hex:'#FFD400', strength:0.60, core:true },
+  { name:'Lemon Yellow',     hex:'#F3E64E', strength:0.42 },
+  { name:'Olive Green',      hex:'#6B7023', strength:0.60 },
+  { name:'Sap Green',        hex:'#3F6B1F', strength:0.70, core:true },
+  { name:'Perm. Green Light',hex:'#4CAF3A', strength:0.60 },
+  { name:"Hooker's Green",   hex:'#1F4D2B', strength:0.90 },
+  { name:'Viridian',         hex:'#0E7C5F', strength:0.90 },
+  { name:'Phthalo Green',    hex:'#00473D', strength:1.60 },
+  { name:'Cerulean Blue',    hex:'#2A7FB8', strength:0.60 },
+  { name:'Phthalo Blue',     hex:'#0B3B60', strength:1.60 },
+  { name:'Cobalt Blue',      hex:'#1C4FA0', strength:0.70 },
+  { name:'Ultramarine Blue', hex:'#1C2B6B', strength:0.80, core:true },
+  { name:'Dioxazine Purple', hex:'#3B1A5E', strength:1.40 },
+  { name:'Quin. Magenta',    hex:'#93154B', strength:1.00 },
+  { name:'Burnt Umber',      hex:'#4A2C1A', strength:0.70 },
   { name:'Raw Umber',        hex:'#5B4632', strength:0.50 },
+  { name:"Payne's Grey",     hex:'#3A4150', strength:0.90 },
+  { name:'Ivory Black',      hex:'#1B1712', strength:1.30, core:true },
+  { name:'Titanium White',   hex:'#F6F2E7', strength:3.60, core:true },
 ];
 const NP_BASE = PIGMENTS.length;
-const MAX_CUSTOM = 12;
+const MAX_CUSTOM = 8;
 const NP = NP_BASE + MAX_CUSTOM;
 const customColors = new Array(MAX_CUSTOM).fill(null); // {hex} per custom slot, or null if unused
 const pigK = new Float32Array(NP*3), pigS = new Float32Array(NP*3);
@@ -1628,9 +1611,8 @@ const paletteState = {
   waterVolume: 55,         // 0-100 — how much water the water tool adds per touch (swaps in for brush size)
   loaded: new Float32Array(NP),   // pigment vector the Add brush currently deposits
   mixLoad: new Float32Array(NP),  // pigment vector currently carried by the Mix brush
-  selectedPigment: 5,
+  selectedPigment: PIGMENTS.findIndex(p=>p.name==='Cadmium Red'),
   paintType: 'acrylic',
-  copyOnPick: true,
   wetBlobs: [],            // active swirling wells: {shape, strength}
   waterHold: null,         // the well/mix-area shape currently held with the water tool, or null
 };
@@ -1639,9 +1621,14 @@ const paletteState = {
 // keeping a fixed aspect ratio so circular wells never distort into ellipses.
 function computeBoardSize(){
   const rect = paletteBoardWrap.getBoundingClientRect();
-  const pad = 6;
-  const availW = Math.max(200, rect.width - pad*2);
-  const availH = Math.max(160, rect.height - pad*2);
+  // The wrap has its own CSS padding; the board must fit inside the *content*
+  // box, otherwise it overflows by the padding amount and the bottom (and top)
+  // get clipped by the wrap's overflow:hidden.
+  const cs = getComputedStyle(paletteBoardWrap);
+  const padX = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
+  const padY = (parseFloat(cs.paddingTop)||0) + (parseFloat(cs.paddingBottom)||0);
+  const availW = Math.max(200, rect.width - padX - 2);
+  const availH = Math.max(120, rect.height - padY - 2);
   let w = availW, h = availW*0.6;
   if(h > availH){ h = availH; w = availH/0.6; }
   const dpr = Math.min(2, window.devicePixelRatio||1);
@@ -1904,7 +1891,7 @@ function buildPigmentShelf(){
   el.innerHTML = '';
   PIGMENTS.forEach((p,i)=>{
     const d = document.createElement('div');
-    d.className = 'pigment-tube'+(i===paletteState.selectedPigment ? ' active' : '');
+    d.className = 'pigment-tube'+(p.core ? ' core' : '')+(i===paletteState.selectedPigment ? ' active' : '');
     d.title = p.name;
     d.dataset.pidx = i;
     d.innerHTML = `<div class="cap" style="background:${p.hex}"></div><div class="lbl">${p.name}</div>`;
@@ -1943,7 +1930,7 @@ function buildCustomShelf(){
     const h = document.createElement('div');
     h.id = 'customEmptyHint';
     h.className = 'custom-empty-hint';
-    h.textContent = 'No custom colours yet — paste a hex code above.';
+    h.textContent = 'No custom colours yet — use Insert colour below.';
     el.appendChild(h);
   }
 }
@@ -1968,6 +1955,8 @@ function updatePaletteHint(){
   const type = PAINT_TYPES[paletteState.paintType].label;
   if(paletteState.tool==='water'){
     hint.textContent = 'Water tool: press and hold anywhere in a well — the colours in it swirl toward the centre, blending and thinning out the longer you hold.';
+  } else if(paletteState.tool==='cloth'){
+    hint.textContent = 'Cloth: wipe across the palette to lift paint off. The size slider sets how wide the cloth is.';
   } else {
     hint.textContent = `Painting with ${type}. Tap a tube to load Add, then paint into a well. Add deposits paint without mixing; Mix blends whatever it drags through.`;
   }
@@ -2069,12 +2058,19 @@ paintTypeSelect.addEventListener('change', ()=>{
   if(field) renderRect(0,0,fieldW,fieldH);
 });
 
-const copyHexToggle = document.getElementById('copyHexToggle');
-const copyHexLabel = document.getElementById('copyHexLabel');
-copyHexToggle.addEventListener('click', ()=>{
-  paletteState.copyOnPick = !paletteState.copyOnPick;
-  copyHexToggle.classList.toggle('on', paletteState.copyOnPick);
-  copyHexLabel.textContent = 'Copy hex: ' + (paletteState.copyOnPick ? 'On' : 'Off');
+document.getElementById('copyHexBtn').addEventListener('click', ()=>{
+  const hx = document.getElementById('currentColorHex').textContent.trim();
+  if(!/^#[0-9A-Fa-f]{6}$/.test(hx)){ showToast('No colour to copy yet'); return; }
+  copyHexToClipboard(hx.toUpperCase());
+});
+
+const colourDrawer = document.getElementById('colourDrawer');
+const drawerToggle = document.getElementById('drawerToggle');
+drawerToggle.addEventListener('click', ()=>{
+  const open = !colourDrawer.classList.contains('open');
+  colourDrawer.classList.toggle('open', open);
+  drawerToggle.setAttribute('aria-expanded', open);
+  drawerToggle.querySelector('span').textContent = open ? 'Less' : 'More';
 });
 
 let toastTimer = null;
@@ -2120,7 +2116,10 @@ function copyHexToClipboard(hex){
 /* ---------- insert / save a custom hex colour ---------- */
 function normalizeHex(raw){
   if(!raw) return null;
-  let s = raw.trim().replace(/^#/,'');
+  // Tolerate whitespace, leading # (or several), and stray quotes/punctuation
+  // around the code — but the whole thing must be a 3- or 6-digit hex value,
+  // so ordinary text on the clipboard is rejected.
+  let s = String(raw).trim().replace(/^[\s"'`#＃]+/,'').replace(/[\s"'`;,.]+$/,'');
   if(/^[0-9a-fA-F]{3}$/.test(s)){
     s = s.split('').map(c=>c+c).join('');
   }
@@ -2129,6 +2128,23 @@ function normalizeHex(raw){
 }
 const customHexInput = document.getElementById('customHexInput');
 const customHexAdd = document.getElementById('customHexAdd');
+const pasteHexBtn = document.getElementById('pasteHexBtn');
+function addCustomColour(hex){
+  customHexInput.classList.remove('invalid');
+  let slot = customColors.findIndex(c=>c && c.hex===hex);   // already saved? just select it
+  if(slot===-1){
+    slot = customColors.findIndex(c=>c===null);
+    if(slot===-1){
+      slot = 0;
+      showToast('Custom colours full — replacing oldest');
+    }
+    setCustomPigmentSlot(slot, hex);
+    buildCustomShelf();
+  }
+  selectPigment(NP_BASE+slot);
+  customHexInput.value = '';
+  showToast('Added '+hex.toUpperCase()+' to Custom colours');
+}
 function insertCustomHex(){
   const hex = normalizeHex(customHexInput.value);
   if(!hex){
@@ -2136,26 +2152,30 @@ function insertCustomHex(){
     showToast('Not a valid hex code');
     return;
   }
-  customHexInput.classList.remove('invalid');
-  let slot = customColors.findIndex(c=>c===null);
-  if(slot===-1){
-    // shelf full — reuse the oldest slot rather than silently failing
-    slot = 0;
-    showToast('Custom colours full — replacing oldest');
-  }
-  setCustomPigmentSlot(slot, hex);
-  buildCustomShelf();
-  selectPigment(NP_BASE+slot);
-  customHexInput.value = '';
+  addCustomColour(hex);
 }
 customHexAdd.addEventListener('click', insertCustomHex);
 customHexInput.addEventListener('keydown', (e)=>{
   if(e.key==='Enter') insertCustomHex();
   else customHexInput.classList.remove('invalid');
 });
-customHexInput.addEventListener('paste', ()=>{
-  // let the pasted value land, then normalize/validate on next tick
-  setTimeout(()=>{ customHexInput.classList.remove('invalid'); }, 0);
+// Quick paste: read the clipboard and add it straight away if (and only if)
+// it's a hex code.
+pasteHexBtn.addEventListener('click', async ()=>{
+  if(!navigator.clipboard || !navigator.clipboard.readText){
+    showToast('Clipboard unavailable — paste into the box instead');
+    customHexInput.focus();
+    return;
+  }
+  try{
+    const txt = await navigator.clipboard.readText();
+    const hex = normalizeHex(txt);
+    if(!hex){ showToast("Clipboard isn't a hex code"); return; }
+    addCustomColour(hex);
+  } catch(err){
+    showToast('Clipboard blocked — paste into the box instead');
+    customHexInput.focus();
+  }
 });
 
 /* ---------- water tool: swirls whatever's in a well toward its centre ---------- */
@@ -2349,6 +2369,8 @@ function wetTick(){
 }
 
 /* ---------- palette pointer handling ---------- */
+const ZERO_VEC = new Float32Array(NP);   // all-zero pigment vector = bare palette
+const CLOTH_RATE = 0.55, CLOTH_HARDNESS = 0.6;
 let paletteDrawing = false;
 let paletteLast = null;
 
@@ -2378,9 +2400,6 @@ paletteCanvas.addEventListener('pointerdown',(e)=>{
       highlightShelf(-1);
       const hex = compositePixelHex(p.x,p.y);
       updateCurrentColorDisplay(vec, hex);
-      if(paletteState.copyOnPick){
-        copyHexToClipboard(hex.toUpperCase());
-      }
     }
     return;
   }
@@ -2396,7 +2415,10 @@ paletteCanvas.addEventListener('pointerdown',(e)=>{
   }
 
   const typeCfg = PAINT_TYPES[paletteState.paintType];
-  if(paletteState.tool==='mix'){
+  if(paletteState.tool==='cloth'){
+    const bb = depositAt(p.x,p.y,r*1.1,ZERO_VEC,CLOTH_RATE,CLOTH_HARDNESS);
+    renderRect(bb[0]-1,bb[1]-1,bb[2]+2,bb[3]+2);
+  } else if(paletteState.tool==='mix'){
     paletteState.mixLoad = sampleAt(p.x,p.y,r);
     const bb = depositAt(p.x,p.y,r,paletteState.mixLoad,typeCfg.mixRate);
     renderRect(bb[0]-1,bb[1]-1,bb[2]+2,bb[3]+2);
@@ -2429,7 +2451,9 @@ paletteCanvas.addEventListener('pointermove',(e)=>{
     const x = paletteLast.x + (p.x-paletteLast.x)*t;
     const y = paletteLast.y + (p.y-paletteLast.y)*t;
     let bb;
-    if(paletteState.tool==='mix'){
+    if(paletteState.tool==='cloth'){
+      bb = depositAt(x,y,r*1.1,ZERO_VEC,CLOTH_RATE,CLOTH_HARDNESS);
+    } else if(paletteState.tool==='mix'){
       const sampled = sampleAt(x,y,r);
       for(let k=0;k<NP;k++) paletteState.mixLoad[k] += (sampled[k]-paletteState.mixLoad[k])*(typeCfg.mixRate*0.8);
       bb = depositAt(x,y,r,paletteState.mixLoad,typeCfg.mixRate);
